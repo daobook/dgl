@@ -182,9 +182,11 @@ class MovieLens(object):
         test_rating_pairs, test_rating_values = self._generate_pair_value(self.test_rating_info)
 
         def _make_labels(ratings):
-            labels = mx.nd.array(np.searchsorted(self.possible_rating_values, ratings),
-                                 ctx=ctx, dtype=np.int32)
-            return labels
+            return mx.nd.array(
+                np.searchsorted(self.possible_rating_values, ratings),
+                ctx=ctx,
+                dtype=np.int32,
+            )
 
         self.train_enc_graph = self._generate_enc_graph(train_rating_pairs, train_rating_values, add_support=True)
         self.train_dec_graph = self._generate_dec_graph(train_rating_pairs)
@@ -202,10 +204,7 @@ class MovieLens(object):
         self.test_truths = mx.nd.array(test_rating_values, ctx=ctx, dtype=np.float32)
 
         def _npairs(graph):
-            rst = 0
-            for r in self.possible_rating_values:
-                rst += graph.number_of_edges(str(r))
-            return rst
+            return sum(graph.number_of_edges(str(r)) for r in self.possible_rating_values)
 
         print("Train enc graph: \t#user:{}\t#movie:{}\t#pairs:{}".format(
             self.train_enc_graph.number_of_nodes('user'), self.train_enc_graph.number_of_nodes('movie'),
@@ -344,12 +343,19 @@ class MovieLens(object):
         -------
         rating_info : pd.DataFrame
         """
-        rating_info = pd.read_csv(
-            file_path, sep=sep, header=None,
+        return pd.read_csv(
+            file_path,
+            sep=sep,
+            header=None,
             names=['user_id', 'movie_id', 'rating', 'timestamp'],
-            dtype={'user_id': np.int32, 'movie_id' : np.int32,
-                   'ratings': np.float32, 'timestamp': np.int64}, engine='python')
-        return rating_info
+            dtype={
+                'user_id': np.int32,
+                'movie_id': np.int32,
+                'ratings': np.float32,
+                'timestamp': np.int64,
+            },
+            engine='python',
+        )
 
     def _load_raw_user_info(self):
         """In MovieLens, the user attributes file have the following formats:
@@ -403,7 +409,7 @@ class MovieLens(object):
         user_features : np.ndarray
 
         """
-        if self._name == 'ml-100k' or self._name == 'ml-1m':
+        if self._name in ['ml-100k', 'ml-1m']:
             ages = self.user_info['age'].values.astype(np.float32)
             gender = (self.user_info['gender'] == 'F').values.astype(np.float32)
             all_occupations = set(self.user_info['occupation'])
@@ -446,10 +452,10 @@ class MovieLens(object):
         """
         if self._name == 'ml-100k':
             GENRES = GENRES_ML_100K
-        elif self._name == 'ml-1m':
-            GENRES = GENRES_ML_1M
         elif self._name == 'ml-10m':
             GENRES = GENRES_ML_10M
+        elif self._name == 'ml-1m':
+            GENRES = GENRES_ML_1M
         else:
             raise NotImplementedError
 
@@ -458,7 +464,7 @@ class MovieLens(object):
             self.movie_info = pd.read_csv(file_path, sep='|', header=None,
                                           names=['id', 'title', 'release_date', 'video_release_date', 'url'] + GENRES,
                                           engine='python')
-        elif self._name == 'ml-1m' or self._name == 'ml-10m':
+        elif self._name in ['ml-1m', 'ml-10m']:
             file_path = os.path.join(self._dir, 'movies.dat')
             movie_info = pd.read_csv(file_path, sep='::', header=None,
                                      names=['id', 'title', 'genres'], engine='python')
@@ -471,7 +477,7 @@ class MovieLens(object):
                     if ele in genre_map:
                         movie_genres[i, genre_map[ele]] = 1.0
                     else:
-                        print('genres not found, filled with unknown: {}'.format(genres))
+                        print(f'genres not found, filled with unknown: {genres}')
                         movie_genres[i, genre_map['unknown']] = 1.0
             for idx, genre_name in enumerate(GENRES):
                 assert idx == genre_map[genre_name]
@@ -496,10 +502,10 @@ class MovieLens(object):
         """
         if self._name == 'ml-100k':
             GENRES = GENRES_ML_100K
-        elif self._name == 'ml-1m':
-            GENRES = GENRES_ML_1M
         elif self._name == 'ml-10m':
             GENRES = GENRES_ML_10M
+        elif self._name == 'ml-1m':
+            GENRES = GENRES_ML_1M
         else:
             raise NotImplementedError
 
@@ -512,18 +518,21 @@ class MovieLens(object):
         for i, title in enumerate(self.movie_info['title']):
             match_res = p.match(title)
             if match_res is None:
-                print('{} cannot be matched, index={}, name={}'.format(title, i, self._name))
+                print(f'{title} cannot be matched, index={i}, name={self._name}')
                 title_context, year = title, 1950
             else:
                 title_context, year = match_res.groups()
             # We use average of glove
             title_embedding[i, :] = word_embedding[tokenizer(title_context)].asnumpy().mean(axis=0)
             release_years[i] = float(year)
-        movie_features = np.concatenate((title_embedding,
-                                         (release_years - 1950.0) / 100.0,
-                                         self.movie_info[GENRES]),
-                                        axis=1)
-        return movie_features
+        return np.concatenate(
+            (
+                title_embedding,
+                (release_years - 1950.0) / 100.0,
+                self.movie_info[GENRES],
+            ),
+            axis=1,
+        )
 
 if __name__ == '__main__':
     MovieLens("ml-100k", ctx=mx.cpu(), symm=True)

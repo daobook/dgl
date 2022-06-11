@@ -42,9 +42,7 @@ class GAT(nn.Module):
         h = inputs
         for l in range(self.num_layers):
             h = self.gat_layers[l](g, h).flatten(1)
-        # output projection
-        logits = self.gat_layers[-1](g, h).mean(1)
-        return logits
+        return self.gat_layers[-1](g, h).mean(1)
 
 @utils.benchmark('time')
 @utils.parametrize('data', ['cora', 'pubmed'])
@@ -81,7 +79,7 @@ def track_time(data):
                                  weight_decay=5e-4)
 
     # dry run
-    for epoch in range(10):
+    for _ in range(10):
         logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()
@@ -90,7 +88,7 @@ def track_time(data):
 
     # timing
     t0 = time.time()
-    for epoch in range(num_epochs):
+    for _ in range(num_epochs):
         logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()

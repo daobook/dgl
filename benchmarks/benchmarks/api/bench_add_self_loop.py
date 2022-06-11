@@ -17,13 +17,13 @@ def track_time(graph_name, format):
     graph = graph.to(device)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         g = graph.add_self_loop()
 
     # timing
-    
+
     with utils.Timer() as t:
-        for i in range(3):
+        for _ in range(3):
             edges = graph.add_self_loop()
 
     return t.elapsed_secs / 3

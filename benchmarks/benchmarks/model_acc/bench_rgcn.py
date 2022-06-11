@@ -24,7 +24,7 @@ class RGCN(nn.Module):
                                         num_bases, activation=F.relu, dropout=dropout,
                                         low_mem=low_mem))
         # h2h
-        for i in range(num_hidden_layers):
+        for _ in range(num_hidden_layers):
             self.layers.append(RelGraphConv(n_hidden, n_hidden, num_rels, "basis",
                                             num_bases, activation=F.relu, dropout=dropout,
                                             low_mem=low_mem))
@@ -75,7 +75,7 @@ def track_acc(data, lowmem, use_type_count):
     train_mask = g.nodes[category].data.pop('train_mask').bool().to(device)
     test_mask = g.nodes[category].data.pop('test_mask').bool().to(device)
     labels = g.nodes[category].data.pop('labels').to(device)
-    
+
     # calculate norm for each edge type and store in edge
     for canonical_etype in g.canonical_etypes:
         u, v, eid = g.all_edges(form='all', etype=canonical_etype)
@@ -126,12 +126,11 @@ def track_acc(data, lowmem, use_type_count):
                                  weight_decay=l2norm)
 
     model.train()
-    for epoch in range(30):
+    for _ in range(30):
         logits = model(g, feats, edge_type, edge_norm)
         loss = F.cross_entropy(logits[train_idx], train_labels)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    acc = evaluate(model, g, feats, edge_type, edge_norm, test_labels, test_idx)
-    return acc
+    return evaluate(model, g, feats, edge_type, edge_norm, test_labels, test_idx)

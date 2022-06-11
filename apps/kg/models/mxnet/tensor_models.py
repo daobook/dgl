@@ -162,7 +162,7 @@ class ExternalEmbedding:
         name : str
             Embedding name.
         """
-        emb_fname = os.path.join(path, name+'.npy')
+        emb_fname = os.path.join(path, f'{name}.npy')
         np.save(emb_fname, self.emb.asnumpy())
 
     def load(self, path, name):
@@ -175,5 +175,5 @@ class ExternalEmbedding:
         name : str
             Embedding name.
         """
-        emb_fname = os.path.join(path, name+'.npy')
+        emb_fname = os.path.join(path, f'{name}.npy')
         self.emb = nd.array(np.load(emb_fname))

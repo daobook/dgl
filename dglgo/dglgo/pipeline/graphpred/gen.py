@@ -80,7 +80,7 @@ class GraphpredPipeline(PipelineBase):
             if cfg is None:
                 cfg = "_".join(["graphpred", data.value, model.value]) + ".yaml"
             yaml.dump(comment_dict, Path(cfg).open("w"))
-            print("Configuration file is generated at {}".format(Path(cfg).absolute()))
+            print(f"Configuration file is generated at {Path(cfg).absolute()}")
 
         return config
 
@@ -113,7 +113,10 @@ class GraphpredPipeline(PipelineBase):
         generated_train_cfg["lr_scheduler"].pop("name")
 
         if user_cfg_dict["data"].get("split_ratio", None) is not None:
-            render_cfg["data_initialize_code"] = "{}, split_ratio={}".format(render_cfg["data_initialize_code"], user_cfg_dict["data"]["split_ratio"])
+            render_cfg[
+                "data_initialize_code"
+            ] = f'{render_cfg["data_initialize_code"]}, split_ratio={user_cfg_dict["data"]["split_ratio"]}'
+
         render_cfg["user_cfg_str"] = f"cfg = {str(generated_user_cfg)}"
         render_cfg["user_cfg"] = user_cfg_dict
         return template.render(**render_cfg)

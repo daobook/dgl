@@ -25,7 +25,7 @@ class PipelineBase(ABC):
         pass
 
     @abstractstaticmethod
-    def gen_script(user_cfg_dict: dict):
+    def gen_script(self):
         pass
 
     @abstractstaticmethod
@@ -60,19 +60,16 @@ class DataFactoryClass:
         return self
 
     def get_dataset_enum(self):
-        enum_class = enum.Enum(
-            "DatasetName", {v["name"]: k for k, v in self.registry.items()})
-        return enum_class
+        return enum.Enum(
+            "DatasetName", {v["name"]: k for k, v in self.registry.items()}
+        )
 
     def get_dataset_classname(self, name):
         return self.registry[name]["class_name"]
 
     def get_constructor_arg_type(self, model_name):
         sigs = inspect.signature(self.registry[model_name].__init__)
-        type_annotation_dict = {}
-        for k, param in dict(sigs.parameters).items():
-            type_annotation_dict[k] = param.annotation
-        return type_annotation_dict
+        return {k: param.annotation for k, param in dict(sigs.parameters).items()}
 
     def get_pydantic_config(self):
 
@@ -105,8 +102,7 @@ class DataFactoryClass:
         return self.registry[name]["class_name"]
 
     def get_generated_code_dict(self, name, args='**cfg["data"]'):
-        d = {}
-        d["data_import_code"] = self.registry[name]["import_code"]
+        d = {"data_import_code": self.registry[name]["import_code"]}
         data_initialize_code = self.registry[name]["class_name"]
         extra_args_dict = self.registry[name]["extra_args"]
         if len(extra_args_dict) > 0:
@@ -261,9 +257,7 @@ class PipelineFactory:
 
     @classmethod
     def get_pipeline_enum(cls):
-        enum_class = enum.Enum(
-            "PipelineName", {k: k for k, v in cls.registry.items()})
-        return enum_class
+        return enum.Enum("PipelineName", {k: k for k, v in cls.registry.items()})
 
 
 model_dir = Path(__file__).parent.parent / "model"
@@ -278,9 +272,7 @@ class ModelFactory:
     """ Internal registry for available executors """
 
     def get_model_enum(self):
-        enum_class = enum.Enum(
-            "ModelName", {k: k for k, v in self.registry.items()})
-        return enum_class
+        return enum.Enum("ModelName", {k: k for k, v in self.registry.items()})
 
     def register(self, model_name: str) -> Callable:
 
@@ -301,20 +293,16 @@ class ModelFactory:
 
     def get_constructor_default_args(self, model_name):
         sigs = inspect.signature(self.registry[model_name].__init__)
-        default_map = {}
-        for k, param in dict(sigs.parameters).items():
-            default_map[k] = param.default
-        return default_map
+        return {k: param.default for k, param in dict(sigs.parameters).items()}
 
     def get_pydantic_constructor_arg_type(self, model_name: str):
         model_enum = self.get_model_enum()
         arg_dict = self.get_constructor_default_args(model_name)
-        type_annotation_dict = {}
         # type_annotation_dict["name"] = Literal[""]
         exempt_keys = ['self', 'in_size', 'out_size', 'data_info']
-        for k, param in arg_dict.items():
-            if k not in exempt_keys:
-                type_annotation_dict[k] = arg_dict[k]
+        type_annotation_dict = {
+            k: arg_dict[k] for k, param in arg_dict.items() if k not in exempt_keys
+        }
 
         class Base(DGLBaseModel):
             name: Literal[model_name]
@@ -324,15 +312,10 @@ class ModelFactory:
         model_class = self.registry[name]
         docs = inspect.getdoc(model_class.__init__)
         param_docs = docscrape.NumpyDocString(docs)
-        param_docs_dict = {}
-        for param in param_docs["Parameters"]:
-            param_docs_dict[param.name] = param.desc[0]
-        return param_docs_dict
+        return {param.name: param.desc[0] for param in param_docs["Parameters"]}
 
     def get_pydantic_model_config(self):
-        model_list = []
-        for k in self.registry:
-            model_list.append(self.get_pydantic_constructor_arg_type(k))
+        model_list = [self.get_pydantic_constructor_arg_type(k) for k in self.registry]
         output = model_list[0]
         for m in model_list[1:]:
             output = Union[output, m]
@@ -343,10 +326,7 @@ class ModelFactory:
 
     def get_constructor_arg_type(self, model_name):
         sigs = inspect.signature(self.registry[model_name].__init__)
-        type_annotation_dict = {}
-        for k, param in dict(sigs.parameters).items():
-            type_annotation_dict[k] = param.annotation
-        return type_annotation_dict
+        return {k: param.annotation for k, param in dict(sigs.parameters).items()}
 
     def filter(self, filter_func):
         new_fac = ModelFactory()
@@ -364,9 +344,9 @@ class SamplerFactory:
         self.registry = {}
 
     def get_model_enum(self):
-        enum_class = enum.Enum(
-            "NegativeSamplerName", {k: k for k, v in self.registry.items()})
-        return enum_class
+        return enum.Enum(
+            "NegativeSamplerName", {k: k for k, v in self.registry.items()}
+        )
 
     def register(self, sampler_name: str) -> Callable:
 
@@ -381,32 +361,25 @@ class SamplerFactory:
 
     def get_constructor_default_args(self, sampler_name):
         sigs = inspect.signature(self.registry[sampler_name].__init__)
-        default_map = {}
-        for k, param in dict(sigs.parameters).items():
-            default_map[k] = param.default
-        return default_map
+        return {k: param.default for k, param in dict(sigs.parameters).items()}
 
     def get_pydantic_constructor_arg_type(self, sampler_name: str):
         model_enum = self.get_model_enum()
         arg_dict = self.get_constructor_default_args(sampler_name)
-        type_annotation_dict = {}
         # type_annotation_dict["name"] = Literal[""]
         exempt_keys = ['self', 'in_size', 'out_size', 'redundancy']
-        for k, param in arg_dict.items():
-            if k not in exempt_keys or param is None:
-                if k == 'k' or k == 'redundancy':
-                    type_annotation_dict[k] = 3
-                else:
-                    type_annotation_dict[k] = arg_dict[k]
+        type_annotation_dict = {
+            k: 3 if k in ['k', 'redundancy'] else arg_dict[k]
+            for k, param in arg_dict.items()
+            if k not in exempt_keys or param is None
+        }
 
         class Base(DGLBaseModel):
             name: Literal[sampler_name]
         return create_model(f'{sampler_name.upper()}SamplerConfig', **type_annotation_dict, __base__=Base)
 
     def get_pydantic_model_config(self):
-        model_list = []
-        for k in self.registry:
-            model_list.append(self.get_pydantic_constructor_arg_type(k))
+        model_list = [self.get_pydantic_constructor_arg_type(k) for k in self.registry]
         output = model_list[0]
         for m in model_list[1:]:
             output = Union[output, m]
@@ -417,19 +390,13 @@ class SamplerFactory:
 
     def get_constructor_arg_type(self, model_name):
         sigs = inspect.signature(self.registry[model_name].__init__)
-        type_annotation_dict = {}
-        for k, param in dict(sigs.parameters).items():
-            type_annotation_dict[k] = param.annotation
-        return type_annotation_dict
+        return {k: param.annotation for k, param in dict(sigs.parameters).items()}
 
     def get_constructor_doc_dict(self, name):
         model_class = self.registry[name]
         docs = inspect.getdoc(model_class)
         param_docs = docscrape.NumpyDocString(docs)
-        param_docs_dict = {}
-        for param in param_docs["Parameters"]:
-            param_docs_dict[param.name] = param.desc[0]
-        return param_docs_dict
+        return {param.name: param.desc[0] for param in param_docs["Parameters"]}
 
 
 NegativeSamplerFactory = SamplerFactory()

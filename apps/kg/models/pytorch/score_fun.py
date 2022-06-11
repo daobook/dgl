@@ -30,12 +30,10 @@ def batched_l2_dist(a, b):
     squared_res = th.baddbmm(
         b_squared.unsqueeze(-2), a, b.transpose(-2, -1), alpha=-2
     ).add_(a_squared.unsqueeze(-1))
-    res = squared_res.clamp_min_(1e-30).sqrt_()
-    return res
+    return squared_res.clamp_min_(1e-30).sqrt_()
 
 def batched_l1_dist(a, b):
-    res = th.cdist(a, b, p=1)
-    return res
+    return th.cdist(a, b, p=1)
 
 class TransEScore(nn.Module):
     """TransE score function
@@ -167,10 +165,10 @@ class TransRScore(nn.Module):
         self.projection_emb.update(gpu_id)
 
     def save(self, path, name):  
-        self.projection_emb.save(path, name+'projection')
+        self.projection_emb.save(path, f'{name}projection')
 
     def load(self, path, name):
-        self.projection_emb.load(path, name+'projection')
+        self.projection_emb.load(path, f'{name}projection')
 
     def prepare_local_emb(self, projection_emb):
         self.global_projection_emb = self.projection_emb

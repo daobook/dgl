@@ -85,12 +85,11 @@ class ArgParser(argparse.ArgumentParser):
                           help='number of thread used')
 
     def parse_args(self):
-        args = super().parse_args()
-        return args
+        return super().parse_args()
 
 def get_logger(args):
     if not os.path.exists(args.model_path):
-        raise Exception('No existing model_path: ' + args.model_path)
+        raise Exception(f'No existing model_path: {args.model_path}')
 
     log_file = os.path.join(args.model_path, 'eval.log')
 
@@ -103,7 +102,7 @@ def get_logger(args):
     )
 
     logger = logging.getLogger(__name__)
-    print("Logs are being recorded at: {}".format(log_file))
+    print(f"Logs are being recorded at: {log_file}")
     return logger
 
 
@@ -194,16 +193,18 @@ def main(args):
             proc.start()
 
         total_metrics = {}
-        metrics = {}
         logs = []
-        for i in range(args.num_proc):
+        for _ in range(args.num_proc):
             log = queue.get()
             logs = logs + log
 
-        for metric in logs[0].keys():
-            metrics[metric] = sum([log[metric] for log in logs]) / len(logs)
+        metrics = {
+            metric: sum(log[metric] for log in logs) / len(logs)
+            for metric in logs[0].keys()
+        }
+
         for k, v in metrics.items():
-            print('Test average {} at [{}/{}]: {}'.format(k, args.step, args.max_step, v))
+            print(f'Test average {k} at [{args.step}/{args.max_step}]: {v}')
 
         for proc in procs:
             proc.join()

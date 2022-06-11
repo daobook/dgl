@@ -22,12 +22,12 @@ def track_time(graph_name, num_seeds, length, algorithm):
     print(graph_name, num_seeds, length)
     alg = globals()[algorithm]
     # dry run
-    for i in range(5):
+    for _ in range(5):
         _ = alg(graph, seeds, length=length)
 
     # timing
     with utils.Timer() as t:
-        for i in range(50):
+        for _ in range(50):
             _ = alg(graph, seeds, length=length)
 
     return t.elapsed_secs / 50

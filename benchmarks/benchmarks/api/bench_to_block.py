@@ -20,7 +20,7 @@ def track_time(graph_name, num_seed_nodes, fanout):
     dgl.sampling.sample_neighbors(graph, [1, 2, 3], fanout)
 
     subg_list = []
-    for i in range(10):
+    for _ in range(10):
         seed_nodes = np.random.randint(
             0, graph.num_nodes(), size=num_seed_nodes)
         subg = dgl.sampling.sample_neighbors(graph, seed_nodes, fanout)

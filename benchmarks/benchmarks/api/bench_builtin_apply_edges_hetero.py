@@ -12,15 +12,14 @@ from .. import utils
 @utils.parametrize('format', ['coo', 'csr'])
 @utils.parametrize('feat_size', [8, 128, 512])
 @utils.parametrize('reduce_type', ['u->e']) #, 'e->u'])
-
 def track_time( num_relations, format, feat_size, reduce_type):
     device = utils.get_bench_device()
     dd = {}
     candidate_edges = [dgl.data.CoraGraphDataset(verbose=False)[0].edges(), dgl.data.PubmedGraphDataset(verbose=False)[
         0].edges(), dgl.data.CiteseerGraphDataset(verbose=False)[0].edges()]
     for i in range(num_relations):
-        dd[('n1', 'e_{}'.format(i), 'n2')] = candidate_edges[i %
-                                                             len(candidate_edges)]
+        dd['n1', f'e_{i}', 'n2'] = candidate_edges[i % len(candidate_edges)]
+
     graph = dgl.heterograph(dd)
 
     graph = graph.to(device)
@@ -36,13 +35,13 @@ def track_time( num_relations, format, feat_size, reduce_type):
     }
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         graph.apply_edges(reduce_builtin_dict[reduce_type])
 
     # timing
-    
+
     with utils.Timer() as t:
-        for i in range(10):
+        for _ in range(10):
             graph.apply_edges(reduce_builtin_dict[reduce_type])
 
     return t.elapsed_secs / 10

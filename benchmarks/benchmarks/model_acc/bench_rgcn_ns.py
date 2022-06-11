@@ -70,7 +70,7 @@ class EntityClassify(nn.Module):
             self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
             low_mem=self.low_mem, dropout=self.dropout, layer_norm = layer_norm))
         # h2h
-        for idx in range(self.num_hidden_layers):
+        for _ in range(self.num_hidden_layers):
             self.layers.append(RelGraphConv(
                 self.h_dim, self.h_dim, self.num_rels, "basis",
                 self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
@@ -164,11 +164,10 @@ class RelGraphEmbedLayer(nn.Module):
         tsd_ids = node_ids.to(self.node_embeds.weight.device)
         embeds = th.empty(node_ids.shape[0], self.embed_size, device=self.device)
         for ntype in range(self.num_of_ntype):
+            loc = node_tids == ntype
             if features[ntype] is not None:
-                loc = node_tids == ntype
                 embeds[loc] = features[ntype][type_ids[loc]].to(self.device) @ self.embeds[str(ntype)].to(self.device)
             else:
-                loc = node_tids == ntype
                 embeds[loc] = self.node_embeds(tsd_ids[loc]).to(self.device)
 
         return embeds
@@ -178,7 +177,7 @@ def evaluate(model, embed_layer, eval_loader, node_feats):
     embed_layer.eval()
     eval_logits = []
     eval_seeds = []
- 
+
     with th.no_grad():
         for sample_data in eval_loader:
             th.cuda.empty_cache()
@@ -192,7 +191,7 @@ def evaluate(model, embed_layer, eval_loader, node_feats):
             eval_seeds.append(blocks[-1].dstdata['type_id'].cpu().detach())
     eval_logits = th.cat(eval_logits)
     eval_seeds = th.cat(eval_seeds)
- 
+
     return eval_logits, eval_seeds
 
 
@@ -317,11 +316,11 @@ def track_acc(data):
     emb_optimizer = th.optim.SparseAdam(list(embed_layer.node_embeds.parameters()), lr=lr)
 
     print("start training...")
-    for epoch in range(n_epochs):
+    for _ in range(n_epochs):
         model.train()
         embed_layer.train()
 
-        for i, sample_data in enumerate(train_loader):
+        for sample_data in train_loader:
             input_nodes, output_nodes, blocks = sample_data
             feats = embed_layer(input_nodes,
                                 blocks[0].srcdata['ntype'],
@@ -341,6 +340,6 @@ def track_acc(data):
 
     test_logits, test_seeds = evaluate(model, embed_layer, test_loader, node_feats)
     test_loss = F.cross_entropy(test_logits, labels[test_seeds].cpu()).item()
-    test_acc = th.sum(test_logits.argmax(dim=1) == labels[test_seeds].cpu()).item() / len(test_seeds)
-
-    return test_acc
+    return th.sum(
+        test_logits.argmax(dim=1) == labels[test_seeds].cpu()
+    ).item() / len(test_seeds)

@@ -21,7 +21,9 @@ def export(
     f_code = isort.code(f_code)
     with open(output, "w") as f:
         f.write(f_code)
-    print("The python script is generated at {}, based on config file {}".format(Path(output).absolute(), Path(cfg).absolute()))
+    print(
+        f"The python script is generated at {Path(output).absolute()}, based on config file {Path(cfg).absolute()}"
+    )
 
 if __name__ == "__main__":
     export_app = typer.Typer()

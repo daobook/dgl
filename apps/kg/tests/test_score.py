@@ -28,17 +28,15 @@ backend = os.environ.get('DGLBACKEND', 'pytorch')
 if backend.lower() == 'mxnet':
     import mxnet as mx
     mx.random.seed(42)
-    np.random.seed(42)
-
     from models.mxnet.score_fun import *
     from models.mxnet.tensor_models import ExternalEmbedding
 else:
     import torch as th
     th.manual_seed(42)
-    np.random.seed(42)
-
     from models.pytorch.score_fun import *
     from models.pytorch.tensor_models import ExternalEmbedding
+np.random.seed(42)
+
 from models.general_models import KEModel
 from dataloader.sampler import create_neg_subgraph
 
@@ -124,8 +122,10 @@ class BaseKEModel:
             rel = pos_g.edata['emb']
 
             neg_head, tail = self.head_neg_prepare(pos_g.edata['id'], num_chunks, neg_head, tail, -1, False)
-            neg_score = self.head_neg_score(neg_head, rel, tail,
-                                            num_chunks, chunk_size, neg_sample_size)
+            return self.head_neg_score(
+                neg_head, rel, tail, num_chunks, chunk_size, neg_sample_size
+            )
+
         else:
             neg_tail_ids = neg_g.ndata['id'][neg_g.tail_nid]
             neg_tail = self.entity_emb[neg_tail_ids]
@@ -134,10 +134,9 @@ class BaseKEModel:
             rel = pos_g.edata['emb']
 
             head, neg_tail = self.tail_neg_prepare(pos_g.edata['id'], num_chunks, head, neg_tail, -1, False)
-            neg_score = self.tail_neg_score(head, rel, neg_tail,
-                                            num_chunks, chunk_size, neg_sample_size)
-
-        return neg_score
+            return self.tail_neg_score(
+                head, rel, neg_tail, num_chunks, chunk_size, neg_sample_size
+            )
 
 def check_score_func(func_name):
     batch_size = 10

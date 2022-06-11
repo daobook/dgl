@@ -9,7 +9,6 @@ from .. import utils
 @utils.benchmark('time', timeout=1200)
 @utils.parametrize_cpu('graph_name', ['cora', 'livejournal', 'friendster'])
 @utils.parametrize_gpu('graph_name', ['cora', 'livejournal'])
-# in_edges on coo is not supported on cuda
 @utils.parametrize_cpu('format', ['coo', 'csc'])
 @utils.parametrize_gpu('format', ['csc'])
 @utils.parametrize('fraction', [0.01, 0.1])
@@ -28,7 +27,7 @@ def track_time(graph_name, format, fraction):
 
     # timing
     with utils.Timer() as t:
-        for i in range(10):
+        for _ in range(10):
             edges = graph.in_edges(nids)
 
     return t.elapsed_secs / 10

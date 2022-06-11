@@ -39,7 +39,11 @@ from .. import *
 logsigmoid = functional.logsigmoid
 
 def get_device(args):
-    return th.device('cpu') if args.gpu[0] < 0 else th.device('cuda:' + str(args.gpu[0]))
+    return (
+        th.device('cpu')
+        if args.gpu[0] < 0
+        else th.device(f'cuda:{str(args.gpu[0])}')
+    )
 
 norm = lambda x, p: x.norm(p=p)**p
 get_scalar = lambda x: x.detach().item()
@@ -161,7 +165,7 @@ class ExternalEmbedding:
 
     def setup_cross_rels(self, cross_rels, global_emb):
         cpu_bitmap = th.zeros((self.num,), dtype=th.bool)
-        for i, rel in enumerate(cross_rels):
+        for rel in cross_rels:
             cpu_bitmap[rel] = 1
         self.cpu_bitmap = cpu_bitmap
         self.has_cross_rel = True
@@ -301,7 +305,7 @@ class ExternalEmbedding:
         name : str
             Embedding name.
         """
-        file_name = os.path.join(path, name+'.npy')
+        file_name = os.path.join(path, f'{name}.npy')
         np.save(file_name, self.emb.cpu().detach().numpy())
 
     def load(self, path, name):
@@ -314,5 +318,5 @@ class ExternalEmbedding:
         name : str
             Embedding name.
         """
-        file_name = os.path.join(path, name+'.npy')
+        file_name = os.path.join(path, f'{name}.npy')
         self.emb = th.Tensor(np.load(file_name))

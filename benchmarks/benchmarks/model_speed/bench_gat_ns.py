@@ -33,7 +33,7 @@ class GAT(nn.Module):
                                          attn_drop=dropout,
                                          activation=activation,
                                          negative_slope=0.2))
-        for i in range(1, n_layers - 1):
+        for _ in range(1, n_layers - 1):
             self.layers.append(dglnn.GATConv(n_hidden * num_heads,
                                              n_hidden,
                                              num_heads=num_heads,

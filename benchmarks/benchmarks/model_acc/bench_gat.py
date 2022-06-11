@@ -41,9 +41,7 @@ class GAT(nn.Module):
         h = inputs
         for l in range(self.num_layers):
             h = self.gat_layers[l](g, h).flatten(1)
-        # output projection
-        logits = self.gat_layers[-1](g, h).mean(1)
-        return logits
+        return self.gat_layers[-1](g, h).mean(1)
 
 def evaluate(model, g, features, labels, mask):
     model.eval()
@@ -87,12 +85,11 @@ def track_acc(data):
     optimizer = torch.optim.Adam(model.parameters(),
                                  lr=1e-2,
                                  weight_decay=5e-4)
-    for epoch in range(200):
+    for _ in range(200):
         logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    acc = evaluate(model, g, features, labels, test_mask)
-    return acc
+    return evaluate(model, g, features, labels, test_mask)

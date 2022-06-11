@@ -65,7 +65,7 @@ class EntityClassify(nn.Module):
             self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
             low_mem=self.low_mem, dropout=self.dropout, layer_norm=layer_norm))
         # h2h
-        for idx in range(self.num_hidden_layers):
+        for _ in range(self.num_hidden_layers):
             self.layers.append(RelGraphConv(
                 self.h_dim, self.h_dim, self.num_rels, "basis",
                 self.num_bases, activation=F.relu, self_loop=self.use_self_loop,

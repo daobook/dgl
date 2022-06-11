@@ -30,7 +30,7 @@ class SAGE(nn.Module):
         self.n_classes = n_classes
         self.layers = nn.ModuleList()
         self.layers.append(dglnn.SAGEConv(in_feats, n_hidden, 'mean'))
-        for i in range(1, n_layers - 1):
+        for _ in range(1, n_layers - 1):
             self.layers.append(dglnn.SAGEConv(n_hidden, n_hidden, 'mean'))
         self.layers.append(dglnn.SAGEConv(n_hidden, n_classes, 'mean'))
         self.dropout = nn.Dropout(dropout)
@@ -174,8 +174,5 @@ def track_time(data):
     for p in procs:
         p.join()
     time_records = result_queue.get(block=False)
-    num_exclude = 10 # exclude first 10 iterations
-    if len(time_records) < 15:
-        # exclude less if less records
-        num_exclude = int(len(time_records)*0.3)
+    num_exclude = int(len(time_records)*0.3) if len(time_records) < 15 else 10
     return np.mean(time_records[num_exclude:])

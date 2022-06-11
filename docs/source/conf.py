@@ -231,7 +231,7 @@ sphinx_gallery_conf = {
 dglbackend = os.environ.get("DGLBACKEND", "")
 if dglbackend == 'mxnet':
     sphinx_gallery_conf['filename_pattern'] = "/*(?<=mx)\.py"
-if dglbackend == 'pytorch':
+elif dglbackend == 'pytorch':
     sphinx_gallery_conf['filename_pattern'] = "/*(?<!mx)\.py"
 
 # sphinx-copybutton tool

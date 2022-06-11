@@ -174,13 +174,13 @@ class RelGraphEmbed(nn.Module):
         DGLHeteroGraph
             The block graph fed with embeddings.
         """
-        embeds = {}
-        for ntype in block.ntypes:
-            if self.node_feats[ntype] is None:
-                embeds[ntype] = self.node_embeds[ntype](block.nodes(ntype)).to(self.device)
-            else:
-                embeds[ntype] = self.node_feats[ntype][block.nodes(ntype)].to(self.device) @ self.embeds[ntype]
-        return embeds
+        return {
+            ntype: self.node_embeds[ntype](block.nodes(ntype)).to(self.device)
+            if self.node_feats[ntype] is None
+            else self.node_feats[ntype][block.nodes(ntype)].to(self.device)
+            @ self.embeds[ntype]
+            for ntype in block.ntypes
+        }
 
 class EntityClassify(nn.Module):
     def __init__(self,
@@ -194,8 +194,7 @@ class EntityClassify(nn.Module):
         self.g = g
         self.h_dim = h_dim
         self.out_dim = out_dim
-        self.rel_names = list(set(g.etypes))
-        self.rel_names.sort()
+        self.rel_names = sorted(set(g.etypes))
         if num_bases < 0 or num_bases > len(self.rel_names):
             self.num_bases = len(self.rel_names)
         else:
@@ -211,7 +210,7 @@ class EntityClassify(nn.Module):
             self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
             dropout=self.dropout, weight=False))
         # h2h
-        for i in range(self.num_hidden_layers):
+        for _ in range(self.num_hidden_layers):
             self.layers.append(RelGraphConvLayer(
                 self.h_dim, self.h_dim, self.rel_names,
                 self.num_bases, activation=F.relu, self_loop=self.use_self_loop,

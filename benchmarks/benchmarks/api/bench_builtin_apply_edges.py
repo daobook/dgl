@@ -25,13 +25,13 @@ def track_time(graph_name, format, feat_size, reduce_type):
     }
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         graph.apply_edges(reduce_builtin_dict[reduce_type])
 
     # timing
-    
+
     with utils.Timer() as t:
-        for i in range(10):
+        for _ in range(10):
             graph.apply_edges(reduce_builtin_dict[reduce_type])
 
     return t.elapsed_secs / 10

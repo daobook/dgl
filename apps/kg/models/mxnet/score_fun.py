@@ -30,14 +30,12 @@ def batched_l2_dist(a, b):
     squared_res = nd.add(nd.linalg_gemm(
         a, nd.transpose(b, axes=(0, 2, 1)), nd.broadcast_axes(nd.expand_dims(b_squared, axis=-2), axis=1, size=a.shape[1]), alpha=-2
     ), nd.expand_dims(a_squared, axis=-1))
-    res = nd.sqrt(nd.clip(squared_res, 1e-30, np.finfo(np.float32).max))
-    return res
+    return nd.sqrt(nd.clip(squared_res, 1e-30, np.finfo(np.float32).max))
 
 def batched_l1_dist(a, b):
     a = nd.expand_dims(a, axis=-2)
     b = nd.expand_dims(b, axis=-3)
-    res = nd.norm(a - b, ord=1, axis=-1)
-    return res
+    return nd.norm(a - b, ord=1, axis=-1)
 
 class TransEScore(nn.Block):
     """ TransE score function
@@ -200,10 +198,10 @@ class TransRScore(nn.Block):
         self.projection_emb.update(gpu_id)
 
     def save(self, path, name):
-        self.projection_emb.save(path, name+'projection')
+        self.projection_emb.save(path, f'{name}projection')
 
     def load(self, path, name):
-        self.projection_emb.load(path, name+'projection')
+        self.projection_emb.load(path, f'{name}projection')
 
     def prepare_local_emb(self, projection_emb):
         self.global_projection_emb = self.projection_emb

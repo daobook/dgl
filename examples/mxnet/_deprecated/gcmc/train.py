@@ -36,8 +36,7 @@ class Net(Block):
             enc_graph,
             ufeat,
             ifeat)
-        pred_ratings = self.decoder(dec_graph, user_out, movie_out)
-        return pred_ratings
+        return self.decoder(dec_graph, user_out, movie_out)
 
 def evaluate(args, net, dataset, segment='valid'):
     possible_rating_values = dataset.possible_rating_values

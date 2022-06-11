@@ -20,12 +20,12 @@ def track_time(graph_name, format, seed_nodes_num):
     seed_nodes = np.random.randint(0, graph.num_nodes(), seed_nodes_num)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         dgl.in_subgraph(graph, seed_nodes)
 
     # timing
     with utils.Timer() as t:
-        for i in range(3):
+        for _ in range(3):
             dgl.in_subgraph(graph, seed_nodes)
 
     return t.elapsed_secs / 3

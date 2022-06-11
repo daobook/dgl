@@ -35,7 +35,7 @@ def load_model(logger, args, n_entities, n_relations, ckpt=None):
     if ckpt is not None:
         assert False, "We do not support loading model emb for genernal Embedding"
 
-    logger.info('Load model {}'.format(args.model_name))
+    logger.info(f'Load model {args.model_name}')
     return model
 
 def load_model_from_checkpoint(logger, args, n_entities, n_relations, ckpt_path):
@@ -60,7 +60,7 @@ def train(args, model, train_sampler, valid_samplers=None, rank=0, rel_parts=Non
         model.prepare_relation(mx.gpu(gpu_id))
 
     start = time.time()
-    for step in range(0, args.max_step):
+    for step in range(args.max_step):
         pos_g, neg_g = next(train_sampler)
         args.step = step
         with mx.autograd.record():
@@ -72,7 +72,7 @@ def train(args, model, train_sampler, valid_samplers=None, rank=0, rel_parts=Non
         if step % args.log_interval == 0:
             for k in logs[0].keys():
                 v = sum(l[k] for l in logs) / len(logs)
-                print('[Train]({}/{}) average {}: {}'.format(step, args.max_step, k, v))
+                print(f'[Train]({step}/{args.max_step}) average {k}: {v}')
             logs = []
             print(time.time() - start)
             start = time.time()
@@ -99,18 +99,18 @@ def test(args, model, test_samplers, rank=0, mode='Test', queue=None):
     if args.strict_rel_part:
         model.load_relation(mx.gpu(gpu_id))
 
+    #print('Number of tests: ' + len(sampler))
+    count = 0
     for sampler in test_samplers:
-        #print('Number of tests: ' + len(sampler))
-        count = 0
         for pos_g, neg_g in sampler:
             model.forward_test(pos_g, neg_g, logs, gpu_id)
 
     metrics = {}
-    if len(logs) > 0:
+    if logs:
         for metric in logs[0].keys():
-            metrics[metric] = sum([log[metric] for log in logs]) / len(logs)
+            metrics[metric] = sum(log[metric] for log in logs) / len(logs)
 
     for k, v in metrics.items():
-        print('{} average {}: {}'.format(mode, k, v))
+        print(f'{mode} average {k}: {v}')
     for i in range(len(test_samplers)):
         test_samplers[i] = test_samplers[i].reset()

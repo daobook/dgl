@@ -12,8 +12,7 @@ class DotPredictor(nn.Module):
         super(DotPredictor, self).__init__()
         lins_list = []
         for _ in range(num_layers-2):
-            lins_list.append(nn.Linear(in_size, hidden_size, bias=bias))
-            lins_list.append(nn.ReLU())
+            lins_list.extend((nn.Linear(in_size, hidden_size, bias=bias), nn.ReLU()))
         lins_list.append(nn.Linear(hidden_size, out_size, bias=bias))
         self.linear = nn.Sequential(*lins_list)
 

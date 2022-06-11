@@ -27,12 +27,12 @@ def track_flops(graph, feat_size, num_heads):
         x = torch.randn(graph.num_nodes(), num_heads, feat_size // num_heads, device=device)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         y = dgl.ops.u_dot_v(graph, x, x)
 
     # timing
     with utils.Timer(device) as t:
-        for i in range(10):
+        for _ in range(10):
             y = dgl.ops.u_dot_v(graph, x, x)
 
     return calc_gflops(graph, feat_size, num_heads, t.elapsed_secs / 10)

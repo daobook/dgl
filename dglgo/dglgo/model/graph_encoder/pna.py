@@ -27,8 +27,7 @@ def aggregate_var(h):
     """variance aggregation"""
     h_mean_squares = torch.mean(h * h, dim=1)
     h_mean = torch.mean(h, dim=1)
-    var = torch.relu(h_mean_squares - h_mean * h_mean)
-    return var
+    return torch.relu(h_mean_squares - h_mean * h_mean)
 
 def aggregate_std(h):
     """standard deviation aggregation"""
@@ -105,10 +104,7 @@ class SimplePNAConv(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.residual = residual
 
-        if batch_norm:
-            self.bn = nn.BatchNorm1d(feat_size)
-        else:
-            self.bn = None
+        self.bn = nn.BatchNorm1d(feat_size) if batch_norm else None
 
     def reduce(self, nodes):
         h = nodes.mailbox['m']
@@ -213,12 +209,12 @@ class PNA(nn.Module):
                                                         num_mlp_layers=num_mlp_layers)
                                           for _ in range(num_layers)])
 
-        if readout == 'sum':
-            self.pool = SumPooling()
-        elif readout == 'mean':
+        if readout == 'mean':
             self.pool = AvgPooling()
+        elif readout == 'sum':
+            self.pool = SumPooling()
         else:
-            raise ValueError("Expect readout to be 'sum' or 'mean', got {}".format(readout))
+            raise ValueError(f"Expect readout to be 'sum' or 'mean', got {readout}")
         self.pred = MLP(embed_size, data_info['out_size'], decreasing_hidden_size=True)
 
     def forward(self, graph, node_feat, edge_feat=None):

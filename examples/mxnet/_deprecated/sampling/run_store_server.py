@@ -64,7 +64,7 @@ def main(args):
               n_test_samples))
 
     # create GCN model
-    print('graph name: ' + graph_name)
+    print(f'graph name: {graph_name}')
     g = dgl.contrib.graph_store.create_graph_store_server(data.graph, graph_name, "shared_mem",
                                                           args.num_workers, False, edge_dir='in')
     g.ndata['features'] = features

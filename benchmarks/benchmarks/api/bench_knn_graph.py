@@ -16,11 +16,11 @@ def track_time(size, dim, k, algorithm):
     features = np.random.RandomState(42).randn(size, dim)
     feat = torch.tensor(features, dtype=torch.float, device=device)
     # dry run
-    for i in range(1):
+    for _ in range(1):
         dgl.knn_graph(feat, k, algorithm=algorithm)
     # timing
     with utils.Timer() as t:
-        for i in range(5):
+        for _ in range(5):
             dgl.knn_graph(feat, k, algorithm=algorithm)
 
     return t.elapsed_secs / 5

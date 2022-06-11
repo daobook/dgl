@@ -14,12 +14,12 @@ def track_time(graph, num_heads):
     score = torch.randn((graph.num_edges(),num_heads)).requires_grad_(True).float().to(device)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         y = dgl.ops.edge_softmax(graph, score)
 
     # timing
     with utils.Timer(device) as t:
-        for i in range(100):
+        for _ in range(100):
             y = dgl.ops.edge_softmax(graph, score)
 
     return  t.elapsed_secs / 100

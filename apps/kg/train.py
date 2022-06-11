@@ -131,7 +131,7 @@ def get_logger(args):
     if not os.path.exists(args.save_path):
         os.mkdir(args.save_path)
 
-    folder = '{}_{}_'.format(args.model_name, args.dataset)
+    folder = f'{args.model_name}_{args.dataset}_'
     n = len([x for x in os.listdir(args.save_path) if x.startswith(folder)])
     folder += str(n)
     args.save_path = os.path.join(args.save_path, folder)
@@ -149,7 +149,7 @@ def get_logger(args):
     )
 
     logger = logging.getLogger(__name__)
-    print("Logs are being recorded at: {}".format(log_file))
+    print(f"Logs are being recorded at: {log_file}")
     return logger
 
 

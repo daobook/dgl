@@ -23,7 +23,7 @@ class RGCN(nn.Module):
         self.layers.append(RelGraphConv(num_nodes, n_hidden, num_rels, "basis",
                                         num_bases, activation=F.relu, dropout=dropout))
         # h2h
-        for i in range(num_hidden_layers):
+        for _ in range(num_hidden_layers):
             self.layers.append(RelGraphConv(n_hidden, n_hidden, num_rels, "basis",
                                             num_bases, activation=F.relu, dropout=dropout))
         # o2h
@@ -41,11 +41,7 @@ class RGCN(nn.Module):
 def track_time(data, use_type_count):
     # args
     if data == 'aifb':
-        if dgl.__version__.startswith("0.8"):
-            num_bases = None
-        else:
-            num_bases = -1
-            
+        num_bases = None if dgl.__version__.startswith("0.8") else -1
         l2norm = 0.
     elif data == 'am':
         num_bases = 40
@@ -65,7 +61,7 @@ def track_time(data, use_type_count):
     train_mask = g.nodes[category].data.pop('train_mask').bool().to(device)
     test_mask = g.nodes[category].data.pop('test_mask').bool().to(device)
     labels = g.nodes[category].data.pop('labels').to(device)
-    
+
     # calculate norm for each edge type and store in edge
     for canonical_etype in g.canonical_etypes:
         u, v, eid = g.all_edges(form='all', etype=canonical_etype)
@@ -116,7 +112,7 @@ def track_time(data, use_type_count):
 
     model.train()
     t0 = time.time()
-    for epoch in range(num_epochs):
+    for _ in range(num_epochs):
         logits = model(g, feats, edge_type, edge_norm)
         loss = F.cross_entropy(logits[train_idx], train_labels)
         optimizer.zero_grad()

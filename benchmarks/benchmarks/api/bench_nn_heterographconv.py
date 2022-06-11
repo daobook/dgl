@@ -13,31 +13,31 @@ from .. import utils
 @utils.parametrize('feat_dim', [4, 32, 256])
 @utils.parametrize('num_relations', [5, 50, 200])
 def track_time(feat_dim, num_relations):
-    device = utils.get_bench_device()    
+    device = utils.get_bench_device()
     dd = {}
     nn_dict = {}
     candidate_edges = [dgl.data.CoraGraphDataset(verbose=False)[0].edges(), dgl.data.PubmedGraphDataset(verbose=False)[
         0].edges(), dgl.data.CiteseerGraphDataset(verbose=False)[0].edges()]
     for i in range(num_relations):
-        dd[('n1', 'e_{}'.format(i), 'n2')] = candidate_edges[i %
-                                                             len(candidate_edges)]
-        nn_dict['e_{}'.format(i)] = SAGEConv(feat_dim, feat_dim, 'mean', activation=F.relu)
+        dd['n1', f'e_{i}', 'n2'] = candidate_edges[i % len(candidate_edges)]
+
+        nn_dict[f'e_{i}'] = SAGEConv(feat_dim, feat_dim, 'mean', activation=F.relu)
 
     # dry run
     feat_dict = {}
     graph = dgl.heterograph(dd)
     for i in range(num_relations):
-        etype = 'e_{}'.format(i)
+        etype = f'e_{i}'
         feat_dict[etype] = torch.randn((graph[etype].num_nodes(), feat_dim), device=device)
 
     conv = HeteroGraphConv(nn_dict).to(device)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         conv(graph, feat_dict)
     # timing
     with utils.Timer() as t:
-        for i in range(50):
+        for _ in range(50):
             conv(graph, feat_dict)
 
     return t.elapsed_secs / 50
