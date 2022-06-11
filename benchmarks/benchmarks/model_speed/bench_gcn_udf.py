@@ -50,7 +50,7 @@ class GCN(nn.Module):
         # input layer
         self.layers.append(GraphConv(in_feats, n_hidden, activation=activation))
         # hidden layers
-        for i in range(n_layers - 1):
+        for _ in range(n_layers - 1):
             self.layers.append(GraphConv(n_hidden, n_hidden, activation=activation))
         # output layer
         self.layers.append(GraphConv(n_hidden, n_classes))
@@ -102,7 +102,7 @@ def track_time(data):
                                  lr=1e-2,
                                  weight_decay=5e-4)
     # dry run
-    for epoch in range(5):
+    for _ in range(5):
         logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()
@@ -110,7 +110,7 @@ def track_time(data):
         optimizer.step()
 
     with utils.Timer(device) as t:
-        for epoch in range(200):
+        for _ in range(200):
             logits = model(g, features)
             loss = loss_fcn(logits[train_mask], labels[train_mask])
             optimizer.zero_grad()

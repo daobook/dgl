@@ -25,13 +25,13 @@ def track_time(graph_name, format, fraction, return_uv):
     u = u.to(device)
     v = v.to(device)
     # dry run
-    for i in range(10):
+    for _ in range(10):
         out = graph.edge_ids(u[0], v[0])
 
     # timing
 
     with utils.Timer() as t:
-        for i in range(3):
+        for _ in range(3):
             edges = graph.edge_ids(u, v, return_uv=return_uv)
 
     return t.elapsed_secs / 3

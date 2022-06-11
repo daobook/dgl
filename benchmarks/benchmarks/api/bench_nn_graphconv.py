@@ -21,11 +21,11 @@ def track_time(graph_name, feat_dim, aggr_type):
     model = SAGEConv(feat_dim, feat_dim, aggr_type, activation=F.relu, bias=False).to(device)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         model(graph, feat)
     # timing
     with utils.Timer() as t:
-        for i in range(50):
+        for _ in range(50):
             model(graph, feat)
 
     return t.elapsed_secs / 50

@@ -21,13 +21,13 @@ def track_time(graph_name, format, seed_egdes_num):
     seed_edges = np.random.randint(0, graph.num_edges(), seed_egdes_num)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         dgl.edge_subgraph(graph, seed_edges)
 
     # timing
-    
+
     with utils.Timer() as t:
-        for i in range(3):
+        for _ in range(3):
             dgl.edge_subgraph(graph, seed_edges)
 
     return t.elapsed_secs / 3

@@ -45,9 +45,9 @@ def json_minify(string, strip_space=True):
                 in_multi = True
             elif val == '//':
                 in_single = True
-        elif val == '*/' and in_multi and not (in_string or in_single):
+        elif val == '*/' and in_multi and not in_string and not in_single:
             in_multi = False
-        elif val in '\r\n' and not (in_multi or in_string) and in_single:
+        elif val in '\r\n' and not (in_multi or in_string):
             in_single = False
         elif not ((in_multi or in_single) or (val in ' \r\n\t' and strip_space)):
             new_str.append(val)
@@ -60,10 +60,7 @@ def json_minify(string, strip_space=True):
 
 
 def add_prefix(branch_name):
-    if '/' not in branch_name:
-        return "origin/"+branch_name
-    else:
-        return branch_name
+    return f"origin/{branch_name}" if '/' not in branch_name else branch_name
 
 
 def change_branch(branch_str: str):
@@ -76,6 +73,5 @@ def change_branch(branch_str: str):
         json.dump(config_json, f)
 
 
-if __name__ == "__main__":
-    if "BRANCH_STR" in os.environ:
-        change_branch(os.environ["BRANCH_STR"])
+if __name__ == "__main__" and "BRANCH_STR" in os.environ:
+    change_branch(os.environ["BRANCH_STR"])

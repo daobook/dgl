@@ -48,8 +48,8 @@ class KGEClient(KVClient):
     def _push_handler(self, name, ID, data, target):
         """Row-Sparse Adagrad updater
         """
-        original_name = name[0:-6]
-        state_sum = target[original_name+'_state-data-']
+        original_name = name[:-6]
+        state_sum = target[f'{original_name}_state-data-']
         grad_sum = (data * data).mean(1)
         state_sum.index_add_(0, ID, grad_sum)
         std = state_sum[ID]  # _sparse_mask
@@ -122,7 +122,7 @@ def train(args, model, train_sampler, valid_samplers=None, rank=0, rel_parts=Non
     if args.async_update:
         model.create_async_update()
     if args.strict_rel_part or args.soft_rel_part:
-        model.prepare_relation(th.device('cuda:' + str(gpu_id)))
+        model.prepare_relation(th.device(f'cuda:{str(gpu_id)}'))
     if args.soft_rel_part:
         model.prepare_cross_rels(cross_rels)
 
@@ -131,7 +131,7 @@ def train(args, model, train_sampler, valid_samplers=None, rank=0, rel_parts=Non
     update_time = 0
     forward_time = 0
     backward_time = 0
-    for step in range(0, args.max_step):
+    for step in range(args.max_step):
         start1 = time.time()
         pos_g, neg_g = next(train_sampler)
         sample_time += time.time() - start1
@@ -163,7 +163,7 @@ def train(args, model, train_sampler, valid_samplers=None, rank=0, rel_parts=Non
         if (step + 1) % args.log_interval == 0:
             for k in logs[0].keys():
                 v = sum(l[k] for l in logs) / len(logs)
-                print('[{}][Train]({}/{}) average {}: {}'.format(rank, (step + 1), args.max_step, k, v))
+                print(f'[{rank}][Train]({step + 1}/{args.max_step}) average {k}: {v}')
             logs = []
             print('[{}][Train] {} steps take {:.3f} seconds'.format(rank, args.log_interval,
                                                             time.time() - start))
@@ -202,7 +202,7 @@ def test(args, model, test_samplers, rank=0, mode='Test', queue=None):
         gpu_id = -1
 
     if args.strict_rel_part or args.soft_rel_part:
-        model.load_relation(th.device('cuda:' + str(gpu_id)))
+        model.load_relation(th.device(f'cuda:{str(gpu_id)}'))
 
     with th.no_grad():
         logs = []
@@ -211,14 +211,14 @@ def test(args, model, test_samplers, rank=0, mode='Test', queue=None):
                 model.forward_test(pos_g, neg_g, logs, gpu_id)
 
         metrics = {}
-        if len(logs) > 0:
+        if logs:
             for metric in logs[0].keys():
-                metrics[metric] = sum([log[metric] for log in logs]) / len(logs)
+                metrics[metric] = sum(log[metric] for log in logs) / len(logs)
         if queue is not None:
             queue.put(logs)
         else:
             for k, v in metrics.items():
-                print('[{}]{} average {}: {}'.format(rank, mode, k, v))
+                print(f'[{rank}]{mode} average {k}: {v}')
     test_samplers[0] = test_samplers[0].reset()
     test_samplers[1] = test_samplers[1].reset()
 
@@ -246,15 +246,13 @@ def dist_train_test(args, model, train_sampler, entity_pb, relation_pb, l2g, ran
     client.barrier()
     print('Total train time {:.3f} seconds'.format(time.time() - train_time_start))
 
-    model = None
-
     if client.get_id() % args.num_client == 0: # pull full model from kvstore
 
         args.num_test_proc = args.num_client
         dataset_full = get_dataset(args.data_path, args.dataset, args.format)
 
-        print('Full data n_entities: ' + str(dataset_full.n_entities))
-        print("Full data n_relations: " + str(dataset_full.n_relations))
+        print(f'Full data n_entities: {str(dataset_full.n_entities)}')
+        print(f"Full data n_relations: {str(dataset_full.n_relations)}")
 
         model_test = load_model(None, args, dataset_full.n_entities, dataset_full.n_relations)
         eval_dataset = EvalDataset(dataset_full, args)
@@ -272,7 +270,7 @@ def dist_train_test(args, model, train_sampler, entity_pb, relation_pb, l2g, ran
         relation_id = F.arange(0, model_test.n_relations)
         relation_data = client.pull(name='relation_emb', id_tensor=relation_id)
         model_test.relation_emb.emb[relation_id] = relation_data
- 
+
         print("Pull entity_emb ... ")
         # split model into 100 small parts
         start = 0
@@ -280,6 +278,8 @@ def dist_train_test(args, model, train_sampler, entity_pb, relation_pb, l2g, ran
         entity_id = F.arange(0, model_test.n_entities)
         count = int(model_test.n_entities / 100)
         end = start + count
+        model = None
+
         while True:
             print("Pull %d / 100 ..." % percent)
             if end >= model_test.n_entities:
@@ -338,16 +338,18 @@ def dist_train_test(args, model, train_sampler, entity_pb, relation_pb, l2g, ran
                 proc.start()
 
             total_metrics = {}
-            metrics = {}
             logs = []
-            for i in range(args.num_test_proc):
+            for _ in range(args.num_test_proc):
                 log = queue.get()
                 logs = logs + log
-            
-            for metric in logs[0].keys():
-                metrics[metric] = sum([log[metric] for log in logs]) / len(logs)
+
+            metrics = {
+                metric: sum(log[metric] for log in logs) / len(logs)
+                for metric in logs[0].keys()
+            }
+
             for k, v in metrics.items():
-                print('Test average {} : {}'.format(k, v))
+                print(f'Test average {k} : {v}')
 
             for proc in procs:
                 proc.join()

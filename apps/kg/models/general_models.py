@@ -92,11 +92,7 @@ class KEModel(object):
         self.entity_emb = ExternalEmbedding(args, n_entities, entity_dim,
                                             F.cpu() if args.mix_cpu_gpu else device)
         # For RESCAL, relation_emb = relation_dim * entity_dim
-        if model_name == 'RESCAL':
-            rel_dim = relation_dim * entity_dim
-        else:
-            rel_dim = relation_dim
-
+        rel_dim = relation_dim * entity_dim if model_name == 'RESCAL' else relation_dim
         self.rel_dim = rel_dim
         self.entity_dim = entity_dim
         self.strict_rel_part = args.strict_rel_part
@@ -107,7 +103,7 @@ class KEModel(object):
         else:
             self.global_relation_emb = ExternalEmbedding(args, n_relations, rel_dim, F.cpu())
 
-        if model_name == 'TransE' or model_name == 'TransE_l2':
+        if model_name in ['TransE', 'TransE_l2']:
             self.score_func = TransEScore(gamma, 'l2')
         elif model_name == 'TransE_l1':
             self.score_func = TransEScore(gamma, 'l1')
@@ -126,7 +122,7 @@ class KEModel(object):
             self.score_func = RESCALScore(relation_dim, entity_dim)
         elif model_name == 'RotatE':
             self.score_func = RotatEScore(gamma, self.emb_init)
-        
+
         self.model_name = model_name
         self.head_neg_score = self.score_func.create_neg(True)
         self.tail_neg_score = self.score_func.create_neg(False)
@@ -157,13 +153,13 @@ class KEModel(object):
         dataset : str
             Dataset name as prefix to the saved embeddings.
         """
-        self.entity_emb.save(path, dataset+'_'+self.model_name+'_entity')
+        self.entity_emb.save(path, f'{dataset}_{self.model_name}_entity')
         if self.strict_rel_part or self.soft_rel_part:
-            self.global_relation_emb.save(path, dataset+'_'+self.model_name+'_relation')
+            self.global_relation_emb.save(path, f'{dataset}_{self.model_name}_relation')
         else:
-            self.relation_emb.save(path, dataset+'_'+self.model_name+'_relation')   
+            self.relation_emb.save(path, f'{dataset}_{self.model_name}_relation')   
 
-        self.score_func.save(path, dataset+'_'+self.model_name)
+        self.score_func.save(path, f'{dataset}_{self.model_name}')
 
     def load_emb(self, path, dataset):
         """Load the model.
@@ -175,9 +171,9 @@ class KEModel(object):
         dataset : str
             Dataset name as prefix to the saved embeddings.
         """
-        self.entity_emb.load(path, dataset+'_'+self.model_name+'_entity')
-        self.relation_emb.load(path, dataset+'_'+self.model_name+'_relation')
-        self.score_func.load(path, dataset+'_'+self.model_name)
+        self.entity_emb.load(path, f'{dataset}_{self.model_name}_entity')
+        self.relation_emb.load(path, f'{dataset}_{self.model_name}_relation')
+        self.score_func.load(path, f'{dataset}_{self.model_name}')
 
     def reset_parameters(self):
         """Re-initialize the model.
@@ -286,12 +282,11 @@ class KEModel(object):
             neg_score = self.tail_neg_score(head, rel, neg_tail,
                                             num_chunks, chunk_size, neg_sample_size)
 
-        if neg_deg_sample:
-            neg_g.neg_sample_size = neg_sample_size
-            mask = mask.reshape(num_chunks, chunk_size, neg_sample_size)
-            return neg_score * mask
-        else:
+        if not neg_deg_sample:
             return neg_score
+        neg_g.neg_sample_size = neg_sample_size
+        mask = mask.reshape(num_chunks, chunk_size, neg_sample_size)
+        return neg_score * mask
 
     def forward_test(self, pos_g, neg_g, logs, gpu_id=-1):
         """Do the forward and generate ranking results.

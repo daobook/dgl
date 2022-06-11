@@ -34,8 +34,7 @@ def load_subtensor(g, input_nodes, device):
     """
     Copys features and labels of a set of nodes onto GPU.
     """
-    batch_inputs = g.ndata['features'][input_nodes].to(device)
-    return batch_inputs
+    return g.ndata['features'][input_nodes].to(device)
 
 class SAGE(nn.Module):
     def __init__(self,
@@ -51,7 +50,7 @@ class SAGE(nn.Module):
         self.n_classes = n_classes
         self.layers = nn.ModuleList()
         self.layers.append(dglnn.SAGEConv(in_feats, n_hidden, 'mean'))
-        for i in range(1, n_layers - 1):
+        for _ in range(1, n_layers - 1):
             self.layers.append(dglnn.SAGEConv(n_hidden, n_hidden, 'mean'))
         self.layers.append(dglnn.SAGEConv(n_hidden, n_classes, 'mean'))
         self.dropout = nn.Dropout(dropout)
@@ -70,8 +69,7 @@ def load_subtensor(g, input_nodes, device):
     """
     Copys features and labels of a set of nodes onto GPU.
     """
-    batch_inputs = g.ndata['features'][input_nodes].to(device)
-    return batch_inputs
+    return g.ndata['features'][input_nodes].to(device)
 
 class CrossEntropyLoss(nn.Module):
     def forward(self, block_outputs, pos_graph, neg_graph):
@@ -86,8 +84,7 @@ class CrossEntropyLoss(nn.Module):
 
         score = th.cat([pos_score, neg_score])
         label = th.cat([th.ones_like(pos_score), th.zeros_like(neg_score)]).long()
-        loss = F.binary_cross_entropy_with_logits(score, label.float())
-        return loss
+        return F.binary_cross_entropy_with_logits(score, label.float())
 
 @utils.benchmark('time', 600)
 @utils.parametrize('data', ['reddit'])

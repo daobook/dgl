@@ -64,7 +64,7 @@ def SoftRelationPartition(edges, n, threshold=0.05):
         Whether there exists some relations belongs to multiple partitions
     """
     heads, rels, tails = edges
-    print('relation partition {} edges into {} parts'.format(len(heads), n))
+    print(f'relation partition {len(heads)} edges into {n} parts')
     uniq, cnts = np.unique(rels, return_counts=True)
     idx = np.flip(np.argsort(cnts))
     cnts = cnts[idx]
@@ -73,16 +73,12 @@ def SoftRelationPartition(edges, n, threshold=0.05):
     edge_cnts = np.zeros(shape=(n,), dtype=np.int64)
     rel_cnts = np.zeros(shape=(n,), dtype=np.int64)
     rel_dict = {}
-    rel_parts = []
     cross_rel_part = []
-    for _ in range(n):
-        rel_parts.append([])
-
+    rel_parts = [[] for _ in range(n)]
     large_threshold = int(len(rels) * threshold)
     capacity_per_partition = int(len(rels) / n)
     # ensure any relation larger than the partition capacity will be split
-    large_threshold = capacity_per_partition if capacity_per_partition < large_threshold \
-                      else large_threshold
+    large_threshold = min(capacity_per_partition, large_threshold)
     num_cross_part = 0
     for i in range(len(cnts)):
         cnt = cnts[i]
@@ -108,8 +104,8 @@ def SoftRelationPartition(edges, n, threshold=0.05):
         rel_dict[r] = r_parts
 
     for i, edge_cnt in enumerate(edge_cnts):
-        print('part {} has {} edges and {} relations'.format(i, edge_cnt, rel_cnts[i]))
-    print('{}/{} duplicated relation across partitions'.format(num_cross_part, len(cnts)))
+        print(f'part {i} has {edge_cnt} edges and {rel_cnts[i]} relations')
+    print(f'{num_cross_part}/{len(cnts)} duplicated relation across partitions')
 
     parts = []
     for i in range(n):
@@ -171,7 +167,7 @@ def BalancedRelationPartition(edges, n):
         Whether there exists some relations belongs to multiple partitions
     """
     heads, rels, tails = edges
-    print('relation partition {} edges into {} parts'.format(len(heads), n))
+    print(f'relation partition {len(heads)} edges into {n} parts')
     uniq, cnts = np.unique(rels, return_counts=True)
     idx = np.flip(np.argsort(cnts))
     cnts = cnts[idx]
@@ -180,10 +176,7 @@ def BalancedRelationPartition(edges, n):
     edge_cnts = np.zeros(shape=(n,), dtype=np.int64)
     rel_cnts = np.zeros(shape=(n,), dtype=np.int64)
     rel_dict = {}
-    rel_parts = []
-    for _ in range(n):
-        rel_parts.append([])
-
+    rel_parts = [[] for _ in range(n)]
     max_edges = (len(rels) // n) + 1
     num_cross_part = 0
     for i in range(len(cnts)):
@@ -210,8 +203,8 @@ def BalancedRelationPartition(edges, n):
         rel_dict[r] = r_parts
 
     for i, edge_cnt in enumerate(edge_cnts):
-        print('part {} has {} edges and {} relations'.format(i, edge_cnt, rel_cnts[i]))
-    print('{}/{} duplicated relation across partitions'.format(num_cross_part, len(cnts)))
+        print(f'part {i} has {edge_cnt} edges and {rel_cnts[i]} relations')
+    print(f'{num_cross_part}/{len(cnts)} duplicated relation across partitions')
 
     parts = []
     for i in range(n):
@@ -259,7 +252,7 @@ def RandomPartition(edges, n):
         Edges of each partition
     """
     heads, rels, tails = edges
-    print('random partition {} edges into {} parts'.format(len(heads), n))
+    print(f'random partition {len(heads)} edges into {n} parts')
     idx = np.random.permutation(len(heads))
     heads[:] = heads[idx]
     rels[:] = rels[idx]
@@ -271,7 +264,7 @@ def RandomPartition(edges, n):
         start = part_size * i
         end = min(part_size * (i + 1), len(idx))
         parts.append(idx[start:end])
-        print('part {} has {} edges'.format(i, len(parts[-1])))
+        print(f'part {i} has {len(parts[-1])} edges')
     return parts
 
 def ConstructGraph(edges, n_entities, args):
@@ -624,7 +617,7 @@ class EvalDataset(object):
         elif eval_type == 'test':
             return self.test
         else:
-            raise Exception('get invalid type: ' + eval_type)
+            raise Exception(f'get invalid type: {eval_type}')
 
     def create_sampler(self, eval_type, batch_size, neg_sample_size, neg_chunk_size,
                        filter_false_neg, mode='head', num_workers=32, rank=0, ranks=1):

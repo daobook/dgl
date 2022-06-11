@@ -23,7 +23,7 @@ class GraphSAGE(nn.Module):
         # input layer
         self.layers.append(SAGEConv(in_feats, n_hidden, aggregator_type))
         # hidden layers
-        for i in range(n_layers - 1):
+        for _ in range(n_layers - 1):
             self.layers.append(SAGEConv(n_hidden, n_hidden, aggregator_type))
         # output layer
         self.layers.append(SAGEConv(n_hidden, n_classes, aggregator_type)) # activation None
@@ -78,12 +78,11 @@ def track_acc(data):
     optimizer = torch.optim.Adam(model.parameters(),
                                  lr=1e-2,
                                  weight_decay=5e-4)
-    for epoch in range(200):
+    for _ in range(200):
         logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    acc = evaluate(model, g, features, labels, test_mask)
-    return acc
+    return evaluate(model, g, features, labels, test_mask)

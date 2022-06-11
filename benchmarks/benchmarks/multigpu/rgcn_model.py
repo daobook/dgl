@@ -112,11 +112,7 @@ class RelGraphEmbedLayer(nn.Module):
     def dgl_emb(self):
         """
         """
-        if self.dgl_sparse:
-            embs = [emb for emb in self.node_embeds.values()]
-            return embs
-        else:
-            return []
+        return list(self.node_embeds.values()) if self.dgl_sparse else []
 
     def forward(self, node_ids, node_tids, type_ids, features):
         """Forward computation

@@ -11,18 +11,18 @@ def track_time(batch_size):
     ds = dgl.data.QM7bDataset()
     # prepare graph
     graphs = []
-    for graph in ds[0:batch_size][0]:
+    for graph in ds[:batch_size][0]:
         g = graph.to(device)
         graphs.append(g)
 
     # dry run
-    for i in range(10):
+    for _ in range(10):
         g = dgl.batch(graphs)
 
     # timing
-    
+
     with utils.Timer() as t:
-        for i in range(100):
+        for _ in range(100):
             g = dgl.batch(graphs)
 
     return t.elapsed_secs / 100

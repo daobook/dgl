@@ -25,9 +25,9 @@ def track_time(graph_name, format, fraction):
             i*10, dtype=torch.int64, device=device))
 
     # timing
-    
+
     with utils.Timer() as t:
-        for i in range(10):
+        for _ in range(10):
             edges = graph.find_edges(eids)
 
     return t.elapsed_secs / 10

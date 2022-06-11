@@ -35,7 +35,7 @@ def parse_ctx(ctx_args):
 
 
 def gluon_total_param_num(net):
-    return sum([np.prod(v.shape) for v in net.collect_params().values()])
+    return sum(np.prod(v.shape) for v in net.collect_params().values())
 
 
 def gluon_net_info(net, save_path=None):
@@ -52,8 +52,7 @@ def gluon_net_info(net, save_path=None):
 
 def params_clip_global_norm(param_dict, clip, ctx):
     grads = [p.grad(ctx) for p in param_dict.values()]
-    gnorm = gluon.utils.clip_global_norm(grads, clip)
-    return gnorm
+    return gluon.utils.clip_global_norm(grads, clip)
 
 def get_activation(act):
     """Get the activation based on the act string
@@ -68,12 +67,11 @@ def get_activation(act):
     """
     if act is None:
         return lambda x: x
-    if isinstance(act, str):
-        if act == 'leaky':
-            return nn.LeakyReLU(0.1)
-        elif act in ['relu', 'sigmoid', 'tanh', 'softrelu', 'softsign']:
-            return nn.Activation(act)
-        else:
-            raise NotImplementedError
-    else:
+    if not isinstance(act, str):
         return act
+    if act == 'leaky':
+        return nn.LeakyReLU(0.1)
+    elif act in ['relu', 'sigmoid', 'tanh', 'softrelu', 'softsign']:
+        return nn.Activation(act)
+    else:
+        raise NotImplementedError

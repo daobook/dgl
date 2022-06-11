@@ -81,21 +81,30 @@ class GCMCLayer(Block):
                 rating = str(rating)
                 if share_user_item_param and user_in_units == movie_in_units:
                     self.W_r[rating] = self.params.get(
-                        'W_r_%s' % rating, shape=(user_in_units, msg_units),
-                        dtype=np.float32, allow_deferred_init=True)
-                    self.W_r['rev-%s' % rating] = self.W_r[rating]
+                        f'W_r_{rating}',
+                        shape=(user_in_units, msg_units),
+                        dtype=np.float32,
+                        allow_deferred_init=True,
+                    )
+
+                    self.W_r[f'rev-{rating}'] = self.W_r[rating]
                 else:
                     self.W_r[rating] = self.params.get(
-                        'W_r_%s' % rating, shape=(user_in_units, msg_units),
-                        dtype=np.float32, allow_deferred_init=True)
-                    self.W_r['rev-%s' % rating] = self.params.get(
-                        'revW_r_%s' % rating, shape=(movie_in_units, msg_units),
-                        dtype=np.float32, allow_deferred_init=True)
+                        f'W_r_{rating}',
+                        shape=(user_in_units, msg_units),
+                        dtype=np.float32,
+                        allow_deferred_init=True,
+                    )
+
+                    self.W_r[f'rev-{rating}'] = self.params.get(
+                        f'revW_r_{rating}',
+                        shape=(movie_in_units, msg_units),
+                        dtype=np.float32,
+                        allow_deferred_init=True,
+                    )
+
             self.ufc = nn.Dense(out_units)
-            if share_user_item_param:
-                self.ifc = self.ufc
-            else:
-                self.ifc = nn.Dense(out_units)
+            self.ifc = self.ufc if share_user_item_param else nn.Dense(out_units)
             self.agg_act = get_activation(agg_act)
             self.out_act = get_activation(out_act)
 
@@ -129,14 +138,14 @@ class GCMCLayer(Block):
             rating = str(rating)
             # W_r * x
             x_u = dot_or_identity(ufeat, self.W_r[rating].data())
-            x_i = dot_or_identity(ifeat, self.W_r['rev-%s' % rating].data())
+            x_i = dot_or_identity(ifeat, self.W_r[f'rev-{rating}'].data())
             # left norm and dropout
             x_u = x_u * self.dropout(graph.nodes['user'].data['cj'])
             x_i = x_i * self.dropout(graph.nodes['movie'].data['cj'])
             graph.nodes['user'].data['h%d' % i] = x_u
             graph.nodes['movie'].data['h%d' % i] = x_i
             funcs[rating] = (fn.copy_u('h%d' % i, 'm'), fn.sum('m', 'h'))
-            funcs['rev-%s' % rating] = (fn.copy_u('h%d' % i, 'm'), fn.sum('m', 'h'))
+            funcs[f'rev-{rating}'] = (fn.copy_u('h%d' % i, 'm'), fn.sum('m', 'h'))
         # message passing
         graph.multi_update_all(funcs, self.agg)
         ufeat = graph.nodes['user'].data.pop('h').reshape((num_u, -1))
@@ -187,12 +196,17 @@ class BiDecoder(Block):
         self.dropout = nn.Dropout(dropout_rate)
         self.Ps = []
         with self.name_scope():
-            for i in range(num_basis_functions):
-                self.Ps.append(self.params.get(
-                    'Ps_%d' % i, shape=(in_units, in_units),
-                    #init=mx.initializer.Orthogonal(scale=1.1, rand_type='normal'),
+            self.Ps.extend(
+                self.params.get(
+                    'Ps_%d' % i,
+                    shape=(in_units, in_units),
+                    # init=mx.initializer.Orthogonal(scale=1.1, rand_type='normal'),
                     init=mx.initializer.Xavier(magnitude=math.sqrt(2.0)),
-                    allow_deferred_init=True))
+                    allow_deferred_init=True,
+                )
+                for i in range(num_basis_functions)
+            )
+
             self.rate_out = nn.Dense(units=len(rating_vals), flatten=False, use_bias=False)
 
     def forward(self, graph, ufeat, ifeat):
@@ -227,7 +241,4 @@ class BiDecoder(Block):
 
 def dot_or_identity(A, B):
     # if A is None, treat as identity matrix
-    if A is None:
-        return B
-    else:
-        return mx.nd.dot(A, B)
+    return B if A is None else mx.nd.dot(A, B)

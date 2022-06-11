@@ -61,7 +61,7 @@ class NodeUpdate(gluon.Block):
             # graphsage
             h = mx.nd.concat(h, self_h)
         else:
-            agg_history_str = 'agg_h_{}'.format(self.layer_id-1)
+            agg_history_str = f'agg_h_{self.layer_id - 1}'
             agg_history = node.data[agg_history_str]
             # normalization constant
             subg_norm = node.data['subg_norm']
@@ -118,7 +118,7 @@ class GraphSAGETrain(gluon.Block):
             nf.layers[i+1].data['self_h'] = self_h
 
             new_history = h.copy().detach()
-            history_str = 'h_{}'.format(i)
+            history_str = f'h_{i}'
             history = nf.layers[i].data[history_str]
             # delta_h used in control variate
             delta_h = h - history

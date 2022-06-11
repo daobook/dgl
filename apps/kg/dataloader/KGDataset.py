@@ -36,7 +36,7 @@ def _download_and_extract(url, path, filename):
             os.makedirs(path, exist_ok=True)
             f_remote = requests.get(url, stream=True)
             sz = f_remote.headers.get('content-length')
-            assert f_remote.status_code == 200, 'fail to open {}'.format(url)
+            assert f_remote.status_code == 200, f'fail to open {url}'
             with open(fn, 'wb') as writer:
                 for chunk in f_remote.iter_content(chunk_size=1024*1024):
                     writer.write(chunk)
@@ -65,8 +65,7 @@ def _parse_srd_format(format):
 
 def _file_line(path):
     with open(path) as f:
-        for i, l in enumerate(f):
-            pass
+        pass
     return i + 1
 
 class KGDataset:
@@ -117,7 +116,7 @@ class KGDataset:
         if path is None:
             return None
 
-        print('Reading {} triples....'.format(mode))
+        print(f'Reading {mode} triples....')
         heads = []
         tails = []
         rels = []
@@ -134,7 +133,7 @@ class KGDataset:
         heads = np.array(heads, dtype=np.int64)
         tails = np.array(tails, dtype=np.int64)
         rels = np.array(rels, dtype=np.int64)
-        print('Finished. Read {} {} triples.'.format(len(heads), mode))
+        print(f'Finished. Read {len(heads)} {mode} triples.')
 
         return (heads, rels, tails)
 
@@ -164,7 +163,7 @@ class PartitionKGDataset():
         heads = []
         tails = []
         rels = []
-        print('Reading {} triples....'.format(mode))
+        print(f'Reading {mode} triples....')
         with open(path) as f:
             for line in f:
                 h, r, t = line.strip().split('\t')
@@ -175,7 +174,7 @@ class PartitionKGDataset():
         heads = np.array(heads, dtype=np.int64)
         tails = np.array(tails, dtype=np.int64)
         rels = np.array(rels, dtype=np.int64)
-        print('Finished. Read {} {} triples.'.format(len(heads), mode))
+        print(f'Finished. Read {len(heads)} {mode} triples.')
 
         return (heads, rels, tails)
 
@@ -195,11 +194,11 @@ class KGDatasetFB15k(KGDataset):
     '''
     def __init__(self, path, name='FB15k'):
         self.name = name
-        url = 'https://data.dgl.ai/dataset/{}.zip'.format(name)
+        url = f'https://data.dgl.ai/dataset/{name}.zip'
 
         if not os.path.exists(os.path.join(path, name)):
             print('File not found. Downloading from', url)
-            _download_and_extract(url, path, name + '.zip')
+            _download_and_extract(url, path, f'{name}.zip')
         self.path = os.path.join(path, name)
 
         super(KGDatasetFB15k, self).__init__(os.path.join(self.path, 'entities.dict'),
@@ -224,11 +223,11 @@ class KGDatasetFB15k237(KGDataset):
     '''
     def __init__(self, path, name='FB15k-237'):
         self.name = name
-        url = 'https://data.dgl.ai/dataset/{}.zip'.format(name)
+        url = f'https://data.dgl.ai/dataset/{name}.zip'
 
         if not os.path.exists(os.path.join(path, name)):
             print('File not found. Downloading from', url)
-            _download_and_extract(url, path, name + '.zip')
+            _download_and_extract(url, path, f'{name}.zip')
         self.path = os.path.join(path, name)
 
         super(KGDatasetFB15k237, self).__init__(os.path.join(self.path, 'entities.dict'),
@@ -253,11 +252,11 @@ class KGDatasetWN18(KGDataset):
     '''
     def __init__(self, path, name='wn18'):
         self.name = name
-        url = 'https://data.dgl.ai/dataset/{}.zip'.format(name)
+        url = f'https://data.dgl.ai/dataset/{name}.zip'
 
         if not os.path.exists(os.path.join(path, name)):
             print('File not found. Downloading from', url)
-            _download_and_extract(url, path, name + '.zip')
+            _download_and_extract(url, path, f'{name}.zip')
         self.path = os.path.join(path, name)
 
         super(KGDatasetWN18, self).__init__(os.path.join(self.path, 'entities.dict'),
@@ -282,11 +281,11 @@ class KGDatasetWN18rr(KGDataset):
     '''
     def __init__(self, path, name='wn18rr'):
         self.name = name
-        url = 'https://data.dgl.ai/dataset/{}.zip'.format(name)
+        url = f'https://data.dgl.ai/dataset/{name}.zip'
 
         if not os.path.exists(os.path.join(path, name)):
             print('File not found. Downloading from', url)
-            _download_and_extract(url, path, name + '.zip')
+            _download_and_extract(url, path, f'{name}.zip')
         self.path = os.path.join(path, name)
 
         super(KGDatasetWN18rr, self).__init__(os.path.join(self.path, 'entities.dict'),
@@ -310,11 +309,11 @@ class KGDatasetFreebase(KGDataset):
     '''
     def __init__(self, path, name='Freebase'):
         self.name = name
-        url = 'https://data.dgl.ai/dataset/{}.zip'.format(name)
+        url = f'https://data.dgl.ai/dataset/{name}.zip'
 
         if not os.path.exists(os.path.join(path, name)):
             print('File not found. Downloading from', url)
-            _download_and_extract(url, path, '{}.zip'.format(name))
+            _download_and_extract(url, path, f'{name}.zip')
         self.path = os.path.join(path, name)
 
         super(KGDatasetFreebase, self).__init__(os.path.join(self.path, 'entity2id.txt'),
@@ -337,7 +336,7 @@ class KGDatasetFreebase(KGDataset):
         heads = []
         tails = []
         rels = []
-        print('Reading {} triples....'.format(mode))
+        print(f'Reading {mode} triples....')
         with open(path) as f:
             if skip_first_line:
                 _ = f.readline()
@@ -350,7 +349,7 @@ class KGDatasetFreebase(KGDataset):
         heads = np.array(heads, dtype=np.int64)
         tails = np.array(tails, dtype=np.int64)
         rels = np.array(rels, dtype=np.int64)
-        print('Finished. Read {} {} triples.'.format(len(heads), mode))
+        print(f'Finished. Read {len(heads)} {mode} triples.')
         return (heads, rels, tails)
 
 class KGDatasetUDDRaw(KGDataset):
@@ -369,8 +368,7 @@ class KGDatasetUDDRaw(KGDataset):
     def __init__(self, path, name, files, format):
         self.name = name
         for f in files:
-            assert os.path.exists(os.path.join(path, f)), \
-                'File {} now exist in {}'.format(f, path)
+            assert os.path.exists(os.path.join(path, f)), f'File {f} now exist in {path}'
 
         assert len(format) == 3
         format = _parse_srd_format(format)
@@ -437,8 +435,7 @@ class KGDatasetUDD(KGDataset):
     def __init__(self, path, name, files, format):
         self.name = name
         for f in files:
-            assert os.path.exists(os.path.join(path, f)), \
-                'File {} now exist in {}'.format(f, path)
+            assert os.path.exists(os.path.join(path, f)), f'File {f} now exist in {path}'
 
         format = _parse_srd_format(format)
         if len(files) == 3:
@@ -458,14 +455,14 @@ class KGDatasetUDD(KGDataset):
     def read_entity(self, entity_path):
         n_entities = 0
         with open(entity_path) as f_ent:
-            for line in f_ent:
+            for _ in f_ent:
                 n_entities += 1
         return None, n_entities
 
     def read_relation(self, relation_path):
         n_relations = 0
         with open(relation_path) as f_rel:
-            for line in f_rel:
+            for _ in f_rel:
                 n_relations += 1
         return None, n_relations
 
@@ -473,7 +470,7 @@ class KGDatasetUDD(KGDataset):
         heads = []
         tails = []
         rels = []
-        print('Reading {} triples....'.format(mode))
+        print(f'Reading {mode} triples....')
         with open(path) as f:
             if skip_first_line:
                 _ = f.readline()
@@ -486,7 +483,7 @@ class KGDatasetUDD(KGDataset):
         heads = np.array(heads, dtype=np.int64)
         tails = np.array(tails, dtype=np.int64)
         rels = np.array(rels, dtype=np.int64)
-        print('Finished. Read {} {} triples.'.format(len(heads), mode))
+        print(f'Finished. Read {len(heads)} {mode} triples.')
         return (heads, rels, tails)
 
 def get_dataset(data_path, data_name, format_str, files=None):
@@ -502,7 +499,7 @@ def get_dataset(data_path, data_name, format_str, files=None):
         elif data_name == 'wn18rr':
             dataset = KGDatasetWN18rr(data_path)
         else: 
-            assert False, "Unknown dataset {}".format(data_name)
+            assert False, f"Unknown dataset {data_name}"
     elif format_str.startswith('raw_udd'):
         # user defined dataset
         format = format_str[8:]
@@ -512,13 +509,13 @@ def get_dataset(data_path, data_name, format_str, files=None):
         format = format_str[4:]
         dataset = KGDatasetUDD(data_path, data_name, files, format)
     else:
-        assert False, "Unknown format {}".format(format_str)
+        assert False, f"Unknown format {format_str}"
 
     return dataset
 
 
 def get_partition_dataset(data_path, data_name, part_id):
-    part_name = os.path.join(data_name, 'partition_'+str(part_id))
+    part_name = os.path.join(data_name, f'partition_{str(part_id)}')
     path = os.path.join(data_path, part_name)
 
     if not os.path.exists(path):
@@ -547,19 +544,15 @@ def get_partition_dataset(data_path, data_name, part_id):
 
     partition_book = []
     with open(partition_book_path) as f:
-        for line in f:
-            partition_book.append(int(line))
-
+        partition_book.extend(int(line) for line in f)
     local_to_global = []
     with open(local2global_path) as f:
-        for line in f:
-            local_to_global.append(int(line))
-
+        local_to_global.extend(int(line) for line in f)
     return dataset, partition_book, local_to_global
 
 
 def get_server_partition_dataset(data_path, data_name, part_id):
-    part_name = os.path.join(data_name, 'partition_'+str(part_id))
+    part_name = os.path.join(data_name, f'partition_{str(part_id)}')
     path = os.path.join(data_path, part_name)
 
     if not os.path.exists(path):
@@ -589,9 +582,7 @@ def get_server_partition_dataset(data_path, data_name, part_id):
 
     local_to_global = []
     with open(local2global_path) as f:
-        for line in f:
-            local_to_global.append(int(line))
-
+        local_to_global.extend(int(line) for line in f)
     global_to_local = [0] * n_entities
     for i in range(len(local_to_global)):
         global_id = local_to_global[i]

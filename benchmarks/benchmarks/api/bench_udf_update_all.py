@@ -38,7 +38,7 @@ def track_time(graph_name, format, feat_size, msg_type, reduce_type):
 
     # timing
     with utils.Timer() as t:
-        for i in range(3):
+        for _ in range(3):
             graph.update_all(msg_udf_dict[msg_type],
                              reduct_udf_dict[reduce_type])
 

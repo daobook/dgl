@@ -22,11 +22,7 @@ def main(args):
     val_mask = g.nodes[:].data['val_mask']
     test_mask = g.nodes[:].data['test_mask']
 
-    if args.num_gpus > 0:
-        ctx = mx.gpu(g.worker_id % args.num_gpus)
-    else:
-        ctx = mx.cpu()
-
+    ctx = mx.gpu(g.worker_id % args.num_gpus) if args.num_gpus > 0 else mx.cpu()
     train_nid = mx.nd.array(np.nonzero(train_mask.asnumpy())[0]).astype(np.int64)
     test_nid = mx.nd.array(np.nonzero(test_mask.asnumpy())[0]).astype(np.int64)
 

@@ -75,13 +75,10 @@ class GAT(nn.Module):
             h = node_feat
         for l in range(self.num_layers - 1):
             h = self.gat_layers[l](graph, h).flatten(1)
-        # output projection
-        logits = self.gat_layers[-1](graph, h).mean(1)
-        return logits
+        return self.gat_layers[-1](graph, h).mean(1)
 
     def forward_block(self,  blocks, node_feat, edge_feat=None):
         h = node_feat
         for l in range(self.num_layers - 1):
             h = self.gat_layers[l](blocks[l], h).flatten(1)
-        logits = self.gat_layers[-1](blocks[-1], h).mean(1)
-        return logits
+        return self.gat_layers[-1](blocks[-1], h).mean(1)

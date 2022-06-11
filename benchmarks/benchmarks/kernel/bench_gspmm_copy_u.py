@@ -24,12 +24,12 @@ def track_flops(graph, feat_size, reducer):
         raise ValueError('Invalid reducer', reducer)
 
     # dry run
-    for i in range(3):
+    for _ in range(3):
         y = op(graph, x)
 
     # timing
     with utils.Timer(device) as t:
-        for i in range(10):
+        for _ in range(10):
             y = op(graph, x)
 
     return calc_gflops(graph, feat_size, t.elapsed_secs / 10)

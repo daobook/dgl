@@ -20,7 +20,7 @@ def track_time(graph_name, format, k):
 
     # timing
     with utils.Timer() as t:
-        for i in range(10):
+        for _ in range(10):
             gg = dgl.khop_graph(graph, k)
 
     return t.elapsed_secs / 10

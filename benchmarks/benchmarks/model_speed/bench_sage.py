@@ -24,7 +24,7 @@ class GraphSAGE(nn.Module):
         # input layer
         self.layers.append(SAGEConv(in_feats, n_hidden, aggregator_type))
         # hidden layers
-        for i in range(n_layers - 1):
+        for _ in range(n_layers - 1):
             self.layers.append(SAGEConv(n_hidden, n_hidden, aggregator_type))
         # output layer
         self.layers.append(SAGEConv(n_hidden, n_classes, aggregator_type)) # activation None
@@ -72,7 +72,7 @@ def track_time(data):
                                  weight_decay=5e-4)
 
     # dry run
-    for i in range(10):
+    for _ in range(10):
         logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()
@@ -81,7 +81,7 @@ def track_time(data):
 
     # timing
     t0 = time.time()
-    for epoch in range(num_epochs):
+    for _ in range(num_epochs):
         logits = model(g, features)
         loss = loss_fcn(logits[train_mask], labels[train_mask])
         optimizer.zero_grad()

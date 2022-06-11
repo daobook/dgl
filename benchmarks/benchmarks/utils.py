@@ -24,7 +24,7 @@ def _download(url, path, filename):
     os.makedirs(path, exist_ok=True)
     f_remote = requests.get(url, stream=True)
     sz = f_remote.headers.get('content-length')
-    assert f_remote.status_code == 200, 'fail to open {}'.format(url)
+    assert f_remote.status_code == 200, f'fail to open {url}'
     with open(fn, 'wb') as writer:
         for chunk in f_remote.iter_content(chunk_size=1024*1024):
             writer.write(chunk)
@@ -78,7 +78,7 @@ def get_graph(name, format = None):
     elif name == 'pubmed':
         g = dgl.data.PubmedGraphDataset(verbose=False)[0]
     elif name == 'livejournal':
-        bin_path = "/tmp/dataset/livejournal/livejournal_{}.bin".format(format)
+        bin_path = f"/tmp/dataset/livejournal/livejournal_{format}.bin"
         if os.path.exists(bin_path):
             g_list, _ = dgl.load_graphs(bin_path)
             g = g_list[0]
@@ -86,7 +86,7 @@ def get_graph(name, format = None):
             g = get_livejournal().formats(format)
             dgl.save_graphs(bin_path, [g])
     elif name == "friendster":
-        bin_path = "/tmp/dataset/friendster/friendster_{}.bin".format(format)
+        bin_path = f"/tmp/dataset/friendster/friendster_{format}.bin"
         if os.path.exists(bin_path):
             g_list, _ = dgl.load_graphs(bin_path)
             g = g_list[0]
@@ -95,7 +95,7 @@ def get_graph(name, format = None):
             g = dgl.compact_graphs(get_friendster()).formats(format)
             dgl.save_graphs(bin_path, [g])
     elif name == "reddit":
-        bin_path = "/tmp/dataset/reddit/reddit_{}.bin".format(format)
+        bin_path = f"/tmp/dataset/reddit/reddit_{format}.bin"
         if os.path.exists(bin_path):
             g_list, _ = dgl.load_graphs(bin_path)
             g = g_list[0]
@@ -274,7 +274,7 @@ def load_nowplaying_rs():
     # Prepare torchtext dataset and vocabulary
     fields = {}
     examples = []
-    for i in range(g.number_of_nodes(item_ntype)):
+    for _ in range(g.number_of_nodes(item_ntype)):
         example = torchtext.data.Example.fromlist(
             [], [])
         examples.append(example)
@@ -310,10 +310,7 @@ def process_data(name):
 
 def get_bench_device():
     device = os.environ.get('DGL_BENCH_DEVICE', 'cpu')
-    if device.lower() == "gpu":
-        return "cuda:0"
-    else:
-        return device
+    return "cuda:0" if device.lower() == "gpu" else device
 
 
 def setup_track_time(*args, **kwargs):
@@ -442,10 +439,10 @@ class TestFilter:
         if self.conf is None:
             return True
         else:
-            for enabled_testname in self.enabled_tests:
-                if enabled_testname in funcfullname:
-                    return True
-            return False
+            return any(
+                enabled_testname in funcfullname
+                for enabled_testname in self.enabled_tests
+            )
 
 
 filter = TestFilter()
@@ -461,7 +458,8 @@ elif device == "gpu":
     parametrize_gpu = parametrize
 else:
     raise Exception(
-        "Unknown device. Must be one of ['cpu', 'gpu'], but got {}".format(device))
+        f"Unknown device. Must be one of ['cpu', 'gpu'], but got {device}"
+    )
 
 
 def skip_if_gpu():
@@ -497,7 +495,7 @@ def skip_if_not_4gpu():
     def _wrapper(func):
         if GPU_COUNT != 4:
             # skip if not enabled
-            print("Skip {}".format(func.__name__))
+            print(f"Skip {func.__name__}")
             func.benchmark_name = "skip_" + func.__name__
         return func
     return _wrapper
@@ -545,10 +543,7 @@ def benchmark(track_type, timeout=60):
 class Timer:
     def __init__(self, device=None):
         self.timer = default_timer
-        if device is None:
-            self.device = get_bench_device()
-        else:
-            self.device = device
+        self.device = get_bench_device() if device is None else device
 
     def __enter__(self):
         if self.device == 'cuda:0':

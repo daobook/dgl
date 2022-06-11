@@ -70,7 +70,7 @@ class EntityClassify(nn.Module):
             self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
             low_mem=self.low_mem, dropout=self.dropout, layer_norm = layer_norm))
         # h2h
-        for idx in range(self.num_hidden_layers):
+        for _ in range(self.num_hidden_layers):
             self.layers.append(RelGraphConv(
                 self.h_dim, self.h_dim, self.num_rels, "basis",
                 self.num_bases, activation=F.relu, self_loop=self.use_self_loop,
@@ -164,11 +164,10 @@ class RelGraphEmbedLayer(nn.Module):
         tsd_ids = node_ids.to(self.node_embeds.weight.device)
         embeds = th.empty(node_ids.shape[0], self.embed_size, device=self.device)
         for ntype in range(self.num_of_ntype):
+            loc = node_tids == ntype
             if features[ntype] is not None:
-                loc = node_tids == ntype
                 embeds[loc] = features[ntype][type_ids[loc]].to(self.device) @ self.embeds[str(ntype)].to(self.device)
             else:
-                loc = node_tids == ntype
                 embeds[loc] = self.node_embeds(tsd_ids[loc]).to(self.device)
 
         return embeds
@@ -305,7 +304,7 @@ def track_time(data):
         loss.backward()
         optimizer.step()
         emb_optimizer.step()
-        
+
         # start timer at before iter_start
         if step == iter_start - 1:
             t0 = time.time()

@@ -25,7 +25,7 @@ class NodeUpdate(gluon.Block):
         if self.test:
             h = h * norm
         else:
-            agg_history_str = 'agg_h_{}'.format(self.layer_id-1)
+            agg_history_str = f'agg_h_{self.layer_id - 1}'
             agg_history = node.data[agg_history_str]
             subg_norm = node.data['subg_norm']
             # control variate
@@ -70,15 +70,11 @@ class GCNSampling(gluon.Block):
             h = mx.nd.Dropout(h, p=self.dropout)
         h = self.dense(h)
 
-        skip_start = (0 == self.n_layers-1)
-        if skip_start:
-            h = mx.nd.concat(h, self.activation(h))
-        else:
-            h = self.activation(h)
-
+        skip_start = self.n_layers == 1
+        h = mx.nd.concat(h, self.activation(h)) if skip_start else self.activation(h)
         for i, layer in enumerate(self.layers):
             new_history = h.copy().detach()
-            history_str = 'h_{}'.format(i)
+            history_str = f'h_{i}'
             history = nf.layers[i].data[history_str]
             h = h - history
 
@@ -122,12 +118,8 @@ class GCNInfer(gluon.Block):
         h = nf.layers[0].data['preprocess']
         h = self.dense(h)
 
-        skip_start = (0 == self.n_layers-1)
-        if skip_start:
-            h = mx.nd.concat(h, self.activation(h))
-        else:
-            h = self.activation(h)
-
+        skip_start = self.n_layers == 1
+        h = mx.nd.concat(h, self.activation(h)) if skip_start else self.activation(h)
         for i, layer in enumerate(self.layers):
             nf.layers[i].data['h'] = h
             nf.block_compute(i,

@@ -134,7 +134,7 @@ class SAGENet(nn.Module):
 
     def forward(self, blocks, h):
         for layer, block in zip(self.convs, blocks):
-            h_dst = h[:block.number_of_nodes('DST/' + block.ntypes[0])]
+            h_dst = h[:block.number_of_nodes(f'DST/{block.ntypes[0]}')]
             h = layer(block, (h, h_dst), block.edata['weights'])
         return h
 
@@ -159,7 +159,7 @@ class LinearProjector(nn.Module):
             module = self.inputs[feature]
             if isinstance(module, (BagOfWords, BagOfWordsPretrained)):
                 # Textual feature; find the length and pass it to the textual module.
-                length = ndata[feature + '__len']
+                length = ndata[f'{feature}__len']
                 result = module(data, length)
             else:
                 result = module(data)
@@ -327,7 +327,7 @@ def assign_textual_node_features(ndata, textset, ntype):
             tokens = tokens.t()
 
         ndata[field_name] = tokens
-        ndata[field_name + '__len'] = lengths
+        ndata[f'{field_name}__len'] = lengths
 
 def assign_features_to_blocks(blocks, g, textset, ntype):
     # For the first block (which is closest to the input), copy the features from

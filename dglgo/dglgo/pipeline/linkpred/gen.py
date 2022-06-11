@@ -105,7 +105,7 @@ class LinkpredPipeline(PipelineBase):
                 cfg = "_".join(["linkpred", data.value, node_model.value, edge_model.value]) + ".yaml"
             yaml = ruamel.yaml.YAML()
             yaml.dump(comment_dict, Path(cfg).open("w"))
-            print("Configuration file is generated at {}".format(Path(cfg).absolute()))
+            print(f"Configuration file is generated at {Path(cfg).absolute()}")
 
         return config
 
@@ -149,7 +149,10 @@ class LinkpredPipeline(PipelineBase):
 
         if user_cfg_dict["data"].get("split_ratio", None) is not None:
             assert user_cfg_dict["data"].get("neg_ratio", None) is not None, "Please specify both split_ratio and neg_ratio"
-            render_cfg["data_initialize_code"] = "{}, split_ratio={}, neg_ratio={}".format(render_cfg["data_initialize_code"], user_cfg_dict["data"]["split_ratio"], user_cfg_dict["data"]["neg_ratio"])
+            render_cfg[
+                "data_initialize_code"
+            ] = f'{render_cfg["data_initialize_code"]}, split_ratio={user_cfg_dict["data"]["split_ratio"]}, neg_ratio={user_cfg_dict["data"]["neg_ratio"]}'
+
             generated_user_cfg["data"].pop("split_ratio")
             generated_user_cfg["data"].pop("neg_ratio")
 

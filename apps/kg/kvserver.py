@@ -38,8 +38,8 @@ class KGEServer(KVServer):
     def _push_handler(self, name, ID, data, target):
         """Row-Sparse Adagrad updater
         """
-        original_name = name[0:-6]
-        state_sum = target[original_name+'_state-data-']
+        original_name = name[:-6]
+        state_sum = target[f'{original_name}_state-data-']
         grad_sum = (data * data).mean(1)
         state_sum.index_add_(0, ID, grad_sum)
         std = state_sum[ID]  # _sparse_mask
@@ -95,7 +95,7 @@ class ArgParser(argparse.ArgumentParser):
 
 
 def get_server_data(args, machine_id):
-   """Get data from data_path/dataset/part_machine_id
+    """Get data from data_path/dataset/part_machine_id
 
       Return: glocal2local, 
               entity_emb, 
@@ -103,21 +103,21 @@ def get_server_data(args, machine_id):
               relation_emb, 
               relation_emb_state
    """
-   g2l, dataset = get_server_partition_dataset(
-    args.data_path, 
-    args.dataset, 
-    machine_id)
+    g2l, dataset = get_server_partition_dataset(
+     args.data_path, 
+     args.dataset, 
+     machine_id)
 
-   # Note that the dataset doesn't ccontain the triple
-   print('n_entities: ' + str(dataset.n_entities))
-   print('n_relations: ' + str(dataset.n_relations))
+       # Note that the dataset doesn't ccontain the triple
+    print(f'n_entities: {str(dataset.n_entities)}')
+    print(f'n_relations: {str(dataset.n_relations)}')
 
-   args.soft_rel_part = False
-   args.strict_rel_part = False
+    args.soft_rel_part = False
+    args.strict_rel_part = False
 
-   model = load_model(None, args, dataset.n_entities, dataset.n_relations)
+    model = load_model(None, args, dataset.n_entities, dataset.n_relations)
 
-   return g2l, model.entity_emb.emb, model.entity_emb.state_sum, model.relation_emb.emb, model.relation_emb.state_sum
+    return g2l, model.entity_emb.emb, model.entity_emb.state_sum, model.relation_emb.emb, model.relation_emb.state_sum
 
 
 def start_server(args):

@@ -25,7 +25,7 @@ class SAGE(nn.Module):
         self.n_classes = n_classes
         self.layers = nn.ModuleList()
         self.layers.append(dglnn.SAGEConv(in_feats, n_hidden, 'mean'))
-        for i in range(1, n_layers - 1):
+        for _ in range(1, n_layers - 1):
             self.layers.append(dglnn.SAGEConv(n_hidden, n_hidden, 'mean'))
         self.layers.append(dglnn.SAGEConv(n_hidden, n_classes, 'mean'))
         self.dropout = nn.Dropout(dropout)
@@ -164,7 +164,7 @@ def track_acc(data):
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # dry run one epoch
-    for step, (input_nodes, seeds, blocks) in enumerate(dataloader):
+    for input_nodes, seeds, blocks in dataloader:
         # Load the input features as well as output labels
         #batch_inputs, batch_labels = load_subtensor(g, seeds, input_nodes, device)
         blocks = [block.int().to(device) for block in blocks]
@@ -179,10 +179,10 @@ def track_acc(data):
         optimizer.step()
 
     # Training loop
-    for epoch in range(num_epochs):
+    for _ in range(num_epochs):
         # Loop over the dataloader to sample the computation dependency graph as a list of
         # blocks.
-        for step, (input_nodes, seeds, blocks) in enumerate(dataloader):
+        for input_nodes, seeds, blocks in dataloader:
             # Load the input features as well as output labels
             #batch_inputs, batch_labels = load_subtensor(g, seeds, input_nodes, device)
             blocks = [block.int().to(device) for block in blocks]

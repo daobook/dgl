@@ -10,10 +10,7 @@ def get_branch_name_from_hash(hash):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
-    if len(stderr) > 0:
-        return hash[:10]
-    else:
-        return stdout.decode("utf-8") .strip("\n")
+    return hash[:10] if len(stderr) > 0 else stdout.decode("utf-8") .strip("\n")
 
 
 def main():
@@ -52,22 +49,27 @@ def main():
 def dict_to_csv(output_results_dict):
     with open("../results/benchmarks.json") as f:
         benchmark_conf = json.load(f)
-    unit_dict = {}
-    for k, v in benchmark_conf.items():
-        if k != 'version':
-            unit_dict[k] = v['unit']
+    unit_dict = {k: v['unit'] for k, v in benchmark_conf.items() if k != 'version'}
     result_list = []
     for machine, per_machine_result in output_results_dict.items():
         for commit, test_cases in per_machine_result.items():
             branch_name = get_branch_name_from_hash(commit)
-            result_column_name = "number_{}".format(branch_name)
+            result_column_name = f"number_{branch_name}"
             # per_commit_result_list = []
             for test_case_name, results in test_cases.items():
-                for result in results:
-                    result_list.append(
-                        {"test_name": test_case_name, 'params': result['params'], 'unit': unit_dict[test_case_name], "number": result['result'], 'commit': branch_name, 'machine': machine})
-    df = pd.DataFrame(result_list)
-    return df
+                result_list.extend(
+                    {
+                        "test_name": test_case_name,
+                        'params': result['params'],
+                        'unit': unit_dict[test_case_name],
+                        "number": result['result'],
+                        'commit': branch_name,
+                        'machine': machine,
+                    }
+                    for result in results
+                )
+
+    return pd.DataFrame(result_list)
 
 
 def side_by_side_view(df):
@@ -76,7 +78,15 @@ def side_by_side_view(df):
     for commit in commits[1:]:
         per_commit_df = df.loc[df['commit'] == commit]
         full_df: pd.DataFrame = full_df.merge(
-            per_commit_df, on=['test_name', 'params', 'machine', 'unit'], how='outer', suffixes=("_{}".format(full_df.iloc[0]["commit"]), "_{}".format(per_commit_df.iloc[0]["commit"])))
+            per_commit_df,
+            on=['test_name', 'params', 'machine', 'unit'],
+            how='outer',
+            suffixes=(
+                f'_{full_df.iloc[0]["commit"]}',
+                f'_{per_commit_df.iloc[0]["commit"]}',
+            ),
+        )
+
     full_df = full_df.loc[:, ~full_df.columns.str.startswith('commit')]
     return full_df
 

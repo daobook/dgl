@@ -23,12 +23,18 @@ exps = [ExperimentSpec(pipeline="nodepred", dataset="cora", model="sage", timeou
 def test_train(spec):
     cfg_path = "/tmp/test.yaml"
     run = subprocess.run(["dgl", "config", spec.pipeline, "--data", spec.dataset, "--model", spec.model, "--cfg", cfg_path], timeout=spec.timeout, capture_output=True)
-    assert run.stderr is None or len(run.stderr) == 0, "Found error message: {}".format(run.stderr)
+    assert (
+        run.stderr is None or len(run.stderr) == 0
+    ), f"Found error message: {run.stderr}"
+
     output = run.stdout.decode("utf-8")
     print(output)
 
     run = subprocess.run(["dgl", "train", "--cfg", cfg_path], timeout=spec.timeout, capture_output=True)
-    assert run.stderr is None or len(run.stderr) == 0, "Found error message: {}".format(run.stderr)
+    assert (
+        run.stderr is None or len(run.stderr) == 0
+    ), f"Found error message: {run.stderr}"
+
     output = run.stdout.decode("utf-8")
     print(output)
 
@@ -40,7 +46,7 @@ def setup_recipe_folder():
 
 @pytest.mark.parametrize("file", [str(f) for f in Path(TEST_RECIPE_FOLDER).glob("*.yaml")])
 def test_recipe(file, setup_recipe_folder):
-    print("DGL enter train {}".format(file))
+    print(f"DGL enter train {file}")
     try:    
         run = subprocess.run(["dgl", "train", "--cfg", file], timeout=5, capture_output=True)
         sh_stdout, sh_stderr = run.stdout, run.stderr
@@ -56,7 +62,7 @@ def test_recipe(file, setup_recipe_folder):
                 continue
             else:
                 assert len(line) == 0, error_str
-    print("{} stdout: {}".format(file, sh_stdout))
-    print("{} stderr: {}".format(file, sh_stderr))
+    print(f"{file} stdout: {sh_stdout}")
+    print(f"{file} stderr: {sh_stderr}")
 
 # test_recipe( , None)

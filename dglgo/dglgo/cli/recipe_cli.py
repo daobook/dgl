@@ -41,7 +41,7 @@ def get_recipe(recipe_name: Optional[str] = typer.Argument(None, help="The recip
         current_dir = Path(os.getcwd())
         recipe_path = recipe_dir / recipe_name
         shutil.copy(recipe_path, current_dir)
-        print("Recipe {} is copied to {}".format(recipe_path.absolute(), current_dir.absolute()))
+        print(f"Recipe {recipe_path.absolute()} is copied to {current_dir.absolute()}")
 
 
 recipe_app = typer.Typer(help="Get example recipes")

@@ -43,7 +43,7 @@ class GCNSampling(gluon.Block):
         with self.name_scope():
             self.layers = gluon.nn.Sequential()
             # input layer
-            skip_start = (0 == n_layers-1)
+            skip_start = n_layers == 1
             self.layers.add(NodeUpdate(in_feats, n_hidden, activation, concat=skip_start))
             # hidden layers
             for i in range(1, n_layers):
@@ -85,7 +85,7 @@ class GCNInfer(gluon.Block):
         with self.name_scope():
             self.layers = gluon.nn.Sequential()
             # input layer
-            skip_start = (0 == n_layers-1)
+            skip_start = n_layers == 1
             self.layers.add(NodeUpdate(in_feats, n_hidden, activation, concat=skip_start))
             # hidden layers
             for i in range(1, n_layers):
@@ -146,7 +146,7 @@ def gcn_ns_train(g, ctx, args, n_classes, train_nid, test_nid, n_test_samples):
 
     # initialize graph
     dur = []
-    for epoch in range(args.n_epochs):
+    for _ in range(args.n_epochs):
         for nf in dgl.contrib.sampling.NeighborSampler(g, args.batch_size,
                                                        args.num_neighbors,
                                                        neighbor_type='in',
